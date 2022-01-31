@@ -1,9 +1,4 @@
-.CanvasContainer {
-    width: 100%;
-    height: 100%;
-}
-
-.CanvasContainer > canvas {
+canvas {
     width: 100%;
     height: 100%;
 }
