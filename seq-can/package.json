@@ -1,5 +1,5 @@
 {
-  "name": "seq-p5",
+  "name": "seq-can",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -10,8 +10,10 @@
     "@types/node": "^16.11.21",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
+    "eyeree-createjs-module": "file:../createjs-module",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-p5": "^1.3.26",
     "react-scripts": "5.0.0",
     "typescript": "^4.5.5",
     "web-vitals": "^2.1.4"

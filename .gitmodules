@@ -1,0 +1,3 @@
+[submodule "createjs-module"]
+	path = createjs-module
+	url = https://github.com/eyeree/createjs-module

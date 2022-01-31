@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Seq-Can",
+  "name": "Sequencer for HTML Canvas Elements",
   "icons": [
     {
       "src": "favicon.ico",
