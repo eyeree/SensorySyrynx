@@ -1,0 +1,15 @@
+.App {
+  display:flex;
+  flex-direction: column;
+}
+
+.App > div:first-child {
+  flex-grow: 1;
+}
+
+.App > div {
+  display:flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+

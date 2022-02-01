@@ -4,7 +4,7 @@ import createjs from 'eyeree-createjs-module';
 
 export type CanvasProps = {}
 
-const Canvas = (props:CanvasProps) => {
+export const Canvas = (props:CanvasProps) => {
 
   const resizeObserver = React.useRef<ResizeObserver>(new ResizeObserver((entries:ResizeObserverEntry[]) => {
     
@@ -18,6 +18,7 @@ const Canvas = (props:CanvasProps) => {
       canvas.width = width*ratio
       canvas.height = height*ratio
       context.scale(ratio, ratio)
+      console.log("resized", width, height, ratio);
       return true
     }
     
@@ -35,6 +36,7 @@ const Canvas = (props:CanvasProps) => {
       circle.y = 50;
       stage.addChild(circle);
     
+      
       stage.update();
     
       createjs.Tween.get(circle, { loop: true })
@@ -55,9 +57,8 @@ const Canvas = (props:CanvasProps) => {
       }
   }, [resizeObserver.current]);
 
-  return <canvas ref={canvasRef} {...props}/>;
+  return <canvas className="Canvas" ref={canvasRef} {...props}/>;
 
 }
 
-export default Canvas
 
