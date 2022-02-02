@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react'
+import React from 'react'
 import './Canvas.css';
 import createjs from 'eyeree-createjs-module';
 
@@ -55,7 +55,7 @@ export const Canvas = (props:CanvasProps) => {
         resizeObserver.current.disconnect();
         createjs.Ticker.removeAllEventListeners();
       }
-  }, [resizeObserver.current]);
+  }, []);
 
   return <canvas className="Canvas" ref={canvasRef} {...props}/>;
 

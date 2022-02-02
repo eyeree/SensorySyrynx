@@ -13,7 +13,7 @@ export function App() {
       <Canvas/>
       <Editor/>
     </Allotment>
-    <Allotment.Pane minSize={100} maxSize={100}>
+    <Allotment.Pane minSize={80} maxSize={80}>
       <Sequencer/>
     </Allotment.Pane>
   </Allotment>;
