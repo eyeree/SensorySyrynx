@@ -1,4 +1,24 @@
 .Sequencer {
     height: 100%;
-    background-color:cadetblue;
+    display: flex;
+    flex-direction: row;
+}
+
+.Sequencerx .Controls {
+    display: flex;
+    flex-direction: column;
+}
+
+.Sequencer .Controls > div {
+    display: flex;
+    flex-direction: row;
+}
+
+.Sequencer .Controls .Slider {
+    width: 100px;
+}
+
+.Sequencer .Program {
+    background-color: darkgoldenrod;
+    flex-grow: 1;
 }
