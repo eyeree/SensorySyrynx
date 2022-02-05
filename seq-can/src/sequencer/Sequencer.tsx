@@ -1,10 +1,21 @@
-import './Sequencer.css'
+/** @jsxImportSource @emotion/react */
+import { css } from '@emotion/react'
+
 import { Controls } from './Controls';
-import { Program } from './Program';
+import { Sequence } from './Sequence';
+
+import { flexRow } from "../common/css";
+
+const container = css(
+    flexRow,
+    {
+        height: "100%"
+    }
+)
 
 export function Sequencer() {
-    return <div className='Sequencer'>
+    return <div css={container}>
         <Controls/>
-        <Program/>
+        <Sequence/>
     </div>
 }

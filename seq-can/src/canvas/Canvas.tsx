@@ -1,8 +1,18 @@
+/** @jsxImportSource @emotion/react */
+import { css } from '@emotion/react'
+
 import React from 'react'
-import './Canvas.css';
 import createjs from 'eyeree-createjs-module';
 
 export type CanvasProps = {}
+
+const canvasCSS = css(
+  {
+    backgroundColor: "black",   
+    width: 1280,
+    height: 1024
+  }
+);
 
 export const Canvas = (props:CanvasProps) => {
 
@@ -48,7 +58,7 @@ export const Canvas = (props:CanvasProps) => {
       .to({ y: 50 }, 2000, createjs.Ease.bounceIn)
     
       createjs.Ticker.framerate = 60;
-      createjs.Ticker.addEventListener("tick", stage);
+      // createjs.Ticker.addEventListener("tick", stage);
   
     } else {
       if (resizeObserver.current)
@@ -57,7 +67,7 @@ export const Canvas = (props:CanvasProps) => {
       }
   }, []);
 
-  return <canvas className="Canvas" ref={canvasRef} {...props}/>;
+  return <canvas css={canvasCSS} ref={canvasRef} {...props}/>;
 
 }
 
