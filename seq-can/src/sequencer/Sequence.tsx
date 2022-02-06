@@ -6,7 +6,7 @@ import { atomFamily, useRecoilState, useRecoilValue } from 'recoil';
 import { sequencerSpeed, sequencerSteps, sequencerPaused } from './Controls';
 
 import { flexRow, flexColumn } from '../common/css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInterval } from '../common/interval';
 import { Program } from '../program';
 import { usePrevious } from '../common/previous';
@@ -92,7 +92,7 @@ const programStepEnabledActiveCSS = css(
 
 const programStepState = atomFamily({
     key: 'Sequencer-ProgramStepState',
-    default: (i:number) => ({ active: false, enabled: false })
+    default: (i:number) => ({ enabled: true })
 })
 
 type StepProps = {
@@ -105,6 +105,7 @@ function MasterStep({index, active}:StepProps) {
 }
 
 type ProgramStepProps = StepProps & {
+    time:number,
     program:Program
 }
 
@@ -124,20 +125,23 @@ function getProgramStepCSS(active:boolean, enabled:boolean) {
     }
 }
 
-function ProgramStep({index, active, program}:ProgramStepProps) {
+function ProgramStep({index, active, program, time}:ProgramStepProps) {
     const [state, setState] = useRecoilState(programStepState(index));
     const css = getProgramStepCSS(active, state.enabled);
     const onClick = () => setState({...state, enabled: !state.enabled});
-    const wasActive = usePrevious(state.active);
+    const wasActive = usePrevious(active);
     const [ , setErrorState ] = useRecoilState(errorState);
-    if(!wasActive && active && state.enabled) {
-        try {
-            program.step(index);
-        } catch(e:any) {
-            const error = getErrorState(e);
-            setErrorState(error);
+    useEffect(() => {
+        if(!wasActive && active && state.enabled) {
+            try {
+                program.step(index, time);
+            } catch(e:any) {
+                console.log("STEP ERROR", e);
+                const error = getErrorState(e);
+                setErrorState(error);
+            }
         }
-    }
+    })
     return <div css={css} onClick={onClick}/>
 }
 
@@ -155,7 +159,8 @@ export function Sequence() {
         setStep(next);
     }
     
-    useInterval(tick, 60000 / speed);
+    const time = 60000 / speed;
+    useInterval(tick, time);
 
     const program = Program.getProgram();
 
@@ -177,6 +182,7 @@ export function Sequence() {
                         index={index} 
                         active={step === index}
                         program={program}
+                        time={time}
                     />
                 )}
             </div>

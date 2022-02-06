@@ -5,8 +5,9 @@ import './Editor.css'
 
 import { basicSetup } from "@codemirror/basic-setup";
 import { EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, keymap } from "@codemirror/view";
 import { javascript } from "@codemirror/lang-javascript";
+import {indentWithTab} from "@codemirror/commands"
 
 import { useEffect, useRef } from 'react';
 import { Program } from '../program';
@@ -22,11 +23,11 @@ circle.y = 50;
 _.container.addChild(circle);
 
 return {
-    step: () => {
-        circle.x += 10;
+    step: ({time}) => {
         if(circle.x >= 1000) {
             circle.x = 50;
         }
+        _.Tween.get(circle).to({x: circle.x+30}, time, _.Ease.getPowInOut(4))
     }
 }
 
@@ -129,6 +130,8 @@ export function Editor() {
                 setErrorState(error);
             }
         }
+
+        compile(defaultCode);
     
         const state = EditorState.create({
             doc: defaultCode,
@@ -136,6 +139,7 @@ export function Editor() {
                 basicSetup, 
                 javascript(),
                 oneDark,
+                keymap.of([indentWithTab]),
                 EditorView.updateListener.of((v)=> {
                   if(v.docChanged) {
                     if(timer) clearTimeout(timer);

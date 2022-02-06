@@ -11,6 +11,8 @@ export type ProgramArgs = {
     LoadQueue: typeof createjs.LoadQueue,
     Shape: typeof createjs.Shape,
     MovieClip: typeof createjs.MovieClip,
+    Ease: typeof createjs.Ease,
+    createjs: typeof createjs,
     container:createjs.Container
 }
 
@@ -21,10 +23,13 @@ const programArgs = {
     LoadQueue: createjs.LoadQueue,
     Shape: createjs.Shape,
     MovieClip: createjs.MovieClip,
+    Ease: createjs.Ease,
+    createjs: createjs
 }
 
 export type StepArgs = {
-    index:number
+    index:number,
+    time:number,
 }
 
 type StepFunction = (args:StepArgs) => void;
@@ -36,7 +41,7 @@ export type ProgramProps = {
 export type ProgramFunction = (args:ProgramArgs) => ProgramProps;
 
 const DefaultProgramProps:ProgramProps = {
-    step: () => console.log('stepped')
+    step: () => {}
 }
 
 export class Program {
@@ -48,8 +53,8 @@ export class Program {
         return program;
     }
     
-    step(index:number) {
-        this.props.step({index})
+    step(index:number, time:number) {
+        this.props.step({index, time})
     }
 
     setFunction(fn:ProgramFunction) {
