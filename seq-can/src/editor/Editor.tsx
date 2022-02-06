@@ -27,10 +27,10 @@ return {
         if(circle.x >= 1000) {
             circle.x = 50;
         }
-        _.Tween.get(circle).to({x: circle.x+30}, time, _.Ease.getPowInOut(4))
+        _.Tween.get(circle, {override:true})
+            .to({x: circle.x+30}, time, _.Ease.getPowInOut(4))
     }
 }
-
 `
 
 const errorCSS = css({
