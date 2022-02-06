@@ -35,11 +35,13 @@ export function Canvas(props:CanvasProps) {
 
     if (canvas.width !== width || canvas.height !== height) {
       const { devicePixelRatio:ratio=1 } = window
-      const context = canvas.getContext('2d')!
       canvas.width = width*ratio
       canvas.height = height*ratio
-      context.scale(ratio, ratio)
-      console.log("resized", width, height, ratio);
+      const extent = Math.min(width, height);
+      stage.scaleX = (ratio * extent) / 2;
+      stage.scaleY = (ratio * extent) / 2;
+      stage.x = width/2;
+      stage.y = height/2;
       return true
     }
     

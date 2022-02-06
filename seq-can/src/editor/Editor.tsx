@@ -16,23 +16,39 @@ import { flexColumn } from '../common/css';
 import { oneDark } from '@codemirror/theme-one-dark'
 import { atom, useRecoilState } from 'recoil';
 
-const defaultCode = `let circle = new _.Shape();
-circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
-circle.x = 50;
-circle.y = 50;
+const defaultCode = `const circle = new _.Shape();
+circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 0.1);
+circle.x = -1;
+circle.y = 0;
 _.container.addChild(circle);
 
 return {
     step: ({time}) => {
-        if(circle.x >= 1000) {
-            circle.x = 50;
+        if(circle.x > 1) {
+            circle.x = -1;
         }
         _.Tween.get(circle, {override:true})
-            .to({x: circle.x+30}, time, _.Ease.getPowInOut(4))
+            .to({x: circle.x+0.1}, time, _.Ease.getPowInOut(4))
     }
 }
 `
 
+const defaultCode2 = `let circle = new _.Shape();
+circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 0.1);
+circle.x = -1;
+circle.y = 0;
+_.container.addChild(circle);
+
+return {
+    step: ({time}) => {
+        if(circle.x >= 1) {
+            circle.x = -1;
+        }
+        _.Tween.get(circle, {override:true})
+            .to({x: circle.x+0.1}, time, _.Ease.getPowInOut(4))
+    }
+}
+`
 const errorCSS = css({
     color: 'red',
     height: 50
