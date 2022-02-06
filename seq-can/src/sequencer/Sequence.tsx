@@ -1,14 +1,16 @@
 /** @jsxImportSource @emotion/react */
-import { css, SerializedStyles } from '@emotion/react'
+import { css } from '@emotion/react'
 
-import { atom, atomFamily, useRecoilState, useRecoilValue } from 'recoil';
+import { atomFamily, useRecoilState, useRecoilValue } from 'recoil';
 
 import { sequencerSpeed, sequencerSteps, sequencerPaused } from './Controls';
 
 import { flexRow, flexColumn } from '../common/css';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useInterval } from '../common/interval';
+import { Program } from '../program';
 import { usePrevious } from '../common/previous';
+import { errorState, getErrorState } from '../editor/Editor';
 
 const sequenceCSS = css(
     flexColumn,
@@ -88,29 +90,22 @@ const programStepEnabledActiveCSS = css(
     }
 )
 
-const masterStepState = atomFamily({
-    key: 'Sequencer-MasterStepState',
-    default: (i:number) => ({ active: false })
-})
-
 const programStepState = atomFamily({
     key: 'Sequencer-ProgramStepState',
     default: (i:number) => ({ active: false, enabled: false })
 })
 
-type MasterStepProps = {
+type StepProps = {
     index:number,
     active:boolean
 }
 
-function MasterStep({index, active}:MasterStepProps) {
+function MasterStep({index, active}:StepProps) {
     return <div css={active ? masterStepActiveCSS : masterStepInactiveCSS}/>
 }
 
-type ProgramStepProps = {
-    index:number,
-    active:boolean
-
+type ProgramStepProps = StepProps & {
+    program:Program
 }
 
 function getProgramStepCSS(active:boolean, enabled:boolean) {
@@ -129,10 +124,20 @@ function getProgramStepCSS(active:boolean, enabled:boolean) {
     }
 }
 
-function ProgramStep({index, active}:ProgramStepProps) {
+function ProgramStep({index, active, program}:ProgramStepProps) {
     const [state, setState] = useRecoilState(programStepState(index));
     const css = getProgramStepCSS(active, state.enabled);
     const onClick = () => setState({...state, enabled: !state.enabled});
+    const wasActive = usePrevious(state.active);
+    const [ , setErrorState ] = useRecoilState(errorState);
+    if(!wasActive && active && state.enabled) {
+        try {
+            program.step(index);
+        } catch(e:any) {
+            const error = getErrorState(e);
+            setErrorState(error);
+        }
+    }
     return <div css={css} onClick={onClick}/>
 }
 
@@ -152,13 +157,28 @@ export function Sequence() {
     
     useInterval(tick, 60000 / speed);
 
+    const program = Program.getProgram();
+
     return (
         <div css={sequenceCSS}>
             <div css={stepsCSS}>
-                {Array.from({length: steps}, (_, index) => <MasterStep key={index} index={index} active={step === index}/>)}
+                {Array.from({length: steps}, (_, index) => 
+                    <MasterStep 
+                        key={index} 
+                        index={index} 
+                        active={step === index}
+                    />
+                )}
             </div>
             <div css={programCSS}>
-                {Array.from({length: steps}, (_, index) => <ProgramStep key={index} index={index} active={step === index}/>)}
+                {Array.from({length: steps}, (_, index) => 
+                    <ProgramStep 
+                        key={index} 
+                        index={index} 
+                        active={step === index}
+                        program={program}
+                    />
+                )}
             </div>
         </div>
     )
