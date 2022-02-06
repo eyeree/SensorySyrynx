@@ -18,14 +18,14 @@ import { atom, useRecoilState } from 'recoil';
 
 const defaultCode = `const circle = new _.Shape();
 circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 0.1);
-circle.x = -1;
+circle.x = _.bounds.left;
 circle.y = 0;
 _.container.addChild(circle);
 
 return {
     step: ({time}) => {
-        if(circle.x > 1) {
-            circle.x = -1;
+        if(circle.x >= _.bounds.right) {
+            circle.x = _.bounds.left;
         }
         _.Tween.get(circle, {override:true})
             .to({x: circle.x+0.1}, time, _.Ease.getPowInOut(4))

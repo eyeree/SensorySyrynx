@@ -24,6 +24,14 @@ export function removeFromStage(...children:createjs.DisplayObject[]) {
   stage!.removeChild(...children);
 }
 
+export type Bounds = {
+  top:number,
+  left:number,
+  bottom:number,
+  right:number
+}
+
+export const bounds:Bounds = {top:0, left:0, bottom:0, right:0}
 
 export function Canvas(props:CanvasProps) {
 
@@ -42,6 +50,11 @@ export function Canvas(props:CanvasProps) {
       stage.scaleY = (ratio * extent) / 2;
       stage.x = width/2;
       stage.y = height/2;
+      bounds.left = -stage.x / stage.scaleX
+      bounds.top = -stage.y / stage.scaleY
+      bounds.right = -bounds.left;
+      bounds.bottom = -bounds.top;
+      console.log('bounds', bounds);
       return true
     }
     

@@ -1,8 +1,9 @@
-import { addToStage, removeFromStage } from '../canvas';
+import { addToStage, removeFromStage, bounds } from '../canvas';
 import createjs from 'eyeree-createjs-module';
 
 import Container = createjs.Container;
 import Graphics = createjs.Graphics;
+import { Bounds } from '../canvas/Canvas';
 
 export type ProgramArgs = {
     Graphics: typeof Graphics,
@@ -13,7 +14,8 @@ export type ProgramArgs = {
     MovieClip: typeof createjs.MovieClip,
     Ease: typeof createjs.Ease,
     createjs: typeof createjs,
-    container:createjs.Container
+    container:createjs.Container,
+    bounds:Bounds
 }
 
 const programArgs = {
@@ -60,7 +62,7 @@ export class Program {
     setFunction(fn:ProgramFunction) {
         this.unload();
         this.container = new createjs.Container();
-        this.props = fn({...programArgs, container:this.container});
+        this.props = fn({...programArgs, container:this.container, bounds});
         addToStage(this.container);
     }
 

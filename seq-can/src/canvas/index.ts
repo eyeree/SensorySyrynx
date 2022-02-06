@@ -1,1 +1,1 @@
-export {Canvas, addToStage, removeFromStage, stage } from './Canvas'
+export {Canvas, addToStage, removeFromStage, bounds} from './Canvas'
