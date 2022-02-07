@@ -54,7 +54,6 @@ export function Canvas(props:CanvasProps) {
       bounds.top = -stage.y / stage.scaleY
       bounds.right = -bounds.left;
       bounds.bottom = -bounds.top;
-      console.log('bounds', bounds);
       return true
     }
     

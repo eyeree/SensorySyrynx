@@ -1,20 +1,23 @@
 /** @jsxImportSource @emotion/react */
-import { css } from '@emotion/react'
 
-import './Editor.css'
+import { css } from '@emotion/react'
+import { useEffect, useRef } from 'react';
+import { atom, useRecoilState, useRecoilValue } from 'recoil';
 
 import { basicSetup } from "@codemirror/basic-setup";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { javascript } from "@codemirror/lang-javascript";
-import {indentWithTab} from "@codemirror/commands"
-
-import { useEffect, useRef } from 'react';
-import { Program } from '../program';
-import { flexColumn } from '../common/css';
-
+import { indentWithTab } from "@codemirror/commands"
 import { oneDark } from '@codemirror/theme-one-dark'
-import { atom, useRecoilState } from 'recoil';
+
+import { Program } from '../program';
+import { flexColumn, flexRow } from '../common/css';
+
+import { useErrorState } from './error_state'
+import { SlotSelector } from './SlotSelector'
+
+import './Editor.css'
 
 const defaultCode = `const circle = new _.Shape();
 circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 0.1);
@@ -33,27 +36,6 @@ return {
 }
 `
 
-const defaultCode2 = `let circle = new _.Shape();
-circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 0.1);
-circle.x = -1;
-circle.y = 0;
-_.container.addChild(circle);
-
-return {
-    step: ({time}) => {
-        if(circle.x >= 1) {
-            circle.x = -1;
-        }
-        _.Tween.get(circle, {override:true})
-            .to({x: circle.x+0.1}, time, _.Ease.getPowInOut(4))
-    }
-}
-`
-const errorCSS = css({
-    color: 'red',
-    height: 50
-})
-
 const containerCSS = css(
     flexColumn,
     {
@@ -65,47 +47,27 @@ const editCSS = css({
     flexGrow: 1
 })
 
-type ErrorState = {
-    message: string,
-    line: number,
-    column: number
-}
-
-const chromeErrorLocation = /<anonymous>:(?<line>\d+):(?<column>\d+)/
-const firefoxErrorLocation = /Function:(?<line>\d+):(?<column>\d+)/
-
-export const errorState = atom<ErrorState|null>({
-    key: "Editor_ErrorState",
-    default: null
-});
-
-export function getErrorState(e:any) {
-    
-    let line = 0;
-    let column = 0;
-
-    const stack = e.stack;
-    if (typeof stack == 'string') {
-
-        let match = stack.match(chromeErrorLocation);
-        if (!match) {
-            match = stack.match(firefoxErrorLocation);
-        }
-
-        if (match) {
-            try {
-                line = Number.parseInt(match.groups!.line) - 4;
-                column = Number.parseInt(match.groups!.column);
-            } catch (e) {
-                console.error(`could not parse matched line or column numbers: ${match.groups!.line} ${match.groups!.column}`)
-            }
-        }
-
+const footerCSS = css(
+    flexRow,
+    {
+        height: 50
     }
+)
 
-    return { message: e.toString(), line, column }
+const errorCSS = css({
+    color: 'red',
+    flexGrow: 1
+})
 
-}
+const controlsCSS = css({
+
+})
+
+
+export const codeState = atom({
+    key: "Editor_CodeState",
+    default: defaultCode
+})
 
 function getFactorySource(code:string) {
     return `
@@ -117,7 +79,7 @@ ${code}
 
 export function Editor() {
 
-    const [error, setErrorState] = useRecoilState(errorState);
+    const [error, setErrorState] = useErrorState();
 
     let errorText = "";
     if (error) {
@@ -142,8 +104,7 @@ export function Editor() {
                 Program.getProgram().setFunction(fn);
                 setErrorState(null);
             } catch (e: any) {
-                const error = getErrorState(e);
-                setErrorState(error);
+                setErrorState(e);
             }
         }
 
@@ -179,7 +140,10 @@ export function Editor() {
     return (
         <div css={containerCSS}>
             <div css={editCSS} ref={editor}/>
-            <div css={errorCSS}>{errorText}</div>
+            <div css={footerCSS}>
+                <div css={errorCSS}>{errorText}</div>
+                <div css={controlsCSS}><SlotSelector/></div>
+            </div>
         </div>
     );
 }

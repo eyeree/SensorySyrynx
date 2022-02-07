@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useInterval } from '../common/interval';
 import { Program } from '../program';
 import { usePrevious } from '../common/previous';
-import { errorState, getErrorState } from '../editor/Editor';
+import { useErrorState } from '../editor';
 
 const sequenceCSS = css(
     flexColumn,
@@ -130,15 +130,14 @@ function ProgramStep({index, active, program, time}:ProgramStepProps) {
     const css = getProgramStepCSS(active, state.enabled);
     const onClick = () => setState({...state, enabled: !state.enabled});
     const wasActive = usePrevious(active);
-    const [ , setErrorState ] = useRecoilState(errorState);
+    const [ , setErrorState ] = useErrorState();
     useEffect(() => {
         if(!wasActive && active && state.enabled) {
             try {
                 program.step(index, time);
             } catch(e:any) {
                 console.log("STEP ERROR", e);
-                const error = getErrorState(e);
-                setErrorState(error);
+                setErrorState(e);
             }
         }
     })
