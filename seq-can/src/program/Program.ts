@@ -59,17 +59,21 @@ export class Program {
         this.props.step({index, time})
     }
 
-    setFunction(fn:ProgramFunction) {
+    setFactoryFunction(fn:ProgramFunction|null) {
         this.unload();
-        this.container = new createjs.Container();
-        this.props = fn({...programArgs, container:this.container, bounds});
-        addToStage(this.container);
+        if(fn !== null) {
+            this.container = new createjs.Container();
+            this.props = fn({...programArgs, container:this.container, bounds});
+            addToStage(this.container);
+        }
     }
 
     unload() {
         if(this.container) {
             removeFromStage(this.container);
+            this.container = null;
         }
+        this.props = { step: () => {} };
     }
 
 }

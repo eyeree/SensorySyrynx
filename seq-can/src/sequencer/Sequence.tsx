@@ -11,6 +11,7 @@ import { useInterval } from '../common/interval';
 import { Program } from '../program';
 import { usePrevious } from '../common/previous';
 import { useErrorState } from '../editor';
+// import { useCompiledCode } from '../editor/CodeEditor';
 
 const sequenceCSS = css(
     flexColumn,
@@ -162,6 +163,14 @@ export function Sequence() {
     useInterval(tick, time);
 
     const program = Program.getProgram();
+    // const fn = useCompiledCode();
+
+    // useEffect(() => {
+    //     console.log("useEffect setFunction", fn)
+    //     if(fn) {
+    //         program.setFunction(fn);
+    //     }
+    // }, [program, fn]);
 
     return (
         <div css={sequenceCSS}>

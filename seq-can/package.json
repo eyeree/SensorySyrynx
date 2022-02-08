@@ -23,6 +23,7 @@
     "allotment": "^1.7.0",
     "eyeree-createjs-module": "file:../createjs-module",
     "immer": "^9.0.12",
+    "nanoid": "^3.2.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-draggable": "^4.4.4",
@@ -33,6 +34,7 @@
     "react-scripts": "5.0.0",
     "react-svg-connector": "^1.0.9",
     "recoil": "^0.6.1",
+    "recoil-persist": "^4.0.0",
     "typescript": "^4.5.5",
     "web-vitals": "^2.1.4"
   },
@@ -40,7 +42,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint --format visualstudio src/**/*.ts*"
   },
   "eslintConfig": {
     "extends": [

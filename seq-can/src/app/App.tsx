@@ -10,36 +10,34 @@ import {flexRow, flexColumn} from '../common/css';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { RecoilRoot } from 'recoil';
 
-const container = css(  
-  flexColumn,
-  {
-    height: "100%"
-  }
-)
-
-const main = css(
+const appCSS = css(  
   flexRow,
   {
-
+    height: "100%",
   }
 )
 
-const editor = css({
-  flexGrow: 1,
+const mainCSS = css(
+  flexColumn,
+  {
+  }
+)
+
+const editorCSS = css({
   padding: 4,
-  paddingLeft: 0
+  paddingLeft: 0,
+  flexGrow:1,
+  minWidth: 500,
 })
 
-const canvas = css({
+const canvasCSS = css({
   border: "gray ridge 12px",
   margin: 4,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center'
 })
 
-const sequencer = css({
-  flexGrow:1
+const sequencerCSS = css({
+  flexGrow:1,
+  minHeight: 100,
 })
 
 const theme = createTheme({
@@ -54,14 +52,12 @@ export function App() {
     <RecoilRoot>
       <ThemeProvider theme={theme}>
         <CssBaseline enableColorScheme={true}/>
-        <div css={container}>
-          <div css={main}>
-            <div css={canvas}><Canvas/></div>
-            <div css={editor}><Editor/></div>
+        <div css={appCSS}>
+          <div css={mainCSS}>
+            <div css={canvasCSS}><Canvas/></div>
+            <div css={sequencerCSS}><Sequencer/></div>
           </div>
-          <div css={sequencer}>
-            <Sequencer/>
-          </div>
+          <div css={editorCSS}><Editor/></div>
         </div>
       </ThemeProvider>
     </RecoilRoot>
