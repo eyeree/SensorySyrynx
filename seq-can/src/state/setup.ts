@@ -1,108 +1,181 @@
-import { atom, atomFamily, DefaultValue, selector, selectorFamily, useRecoilCallback, useRecoilState } from 'recoil';
-import { persistAtom, newId } from './util';
+import { atom, atomFamily, DefaultValue, selector, selectorFamily, useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { persistAtom } from './persistance';
+import { logAtom } from './log';
 
-import { ProgramId, ProgramIdList, selectedProgramId } from './program'
+import { ProgramActionName, ProgramId, ProgramIdList, selectedProgramId, useCreateProgram } from './program'
+import { newId } from './id';
+
+const DEFAULT_EFFECTS = [logAtom]
+const PERSIST_EFFECTS = [...DEFAULT_EFFECTS, persistAtom]
 
 export type SetupId = string;
 export type SetupSpeed = number;
-export type SetupSteps = number;
+export type SetupStepCount = number;
 export type SetupName = string;
-export type SetupProgramStepStatus = boolean;
-export type SetupProgramStepIndex = number;
-export type SetupProgramStepStatusList = Array<SetupProgramStepStatus>
-export type SetupProgramStepStatusListKey = { setupId: SetupId, programId: ProgramId };
-export type SetupProgramStepStatusKey = { setupId: SetupId, programId: ProgramId, stepIndex: SetupProgramStepIndex };
 export type SetupIdList = Array<SetupId>;
+
+export type SetupStepIndex = number;
+export type SetupStepStatus = boolean;
+export type SetupStepStatusList = Array<SetupStepStatus>
 export type SetupProgramIndex = number;
 
-export const allSetupIds = atom<SetupIdList>({
-    key: "allSetupIds",
+const setupIdList = atom<SetupIdList>({
+    key: "setupIdList",
     default: [],
-    effects: [persistAtom("allSetupIds")]
+    effects: PERSIST_EFFECTS
 });
 
-export const setupProgramIds = atomFamily<ProgramIdList, SetupId>({
-    key: "setupProgramIds",
+const setupProgramIdList = atomFamily<ProgramIdList, SetupId>({
+    key: "setupProgramIdList",
     default: setupId => [],
-    effects: setupId => [persistAtom(`setupProgramIds-${setupId}`)]
+    effects: PERSIST_EFFECTS
 });
 
-export const setupName = atomFamily<SetupName, SetupId>({
+export const useSetupProgramIdList = (setupId:SetupId) => useRecoilValue(setupProgramIdList(setupId));
+
+const setupName = atomFamily<SetupName, SetupId>({
     key: "setupName",
     default: setupId => "New Setup",
-    effects: setupId => [persistAtom(`setupName-${setupId}`)]
+    effects: PERSIST_EFFECTS
 });
 
-export const setupSpeed = atomFamily<SetupSpeed, SetupId>({
+
+type SetupListEntry = { setupId: string, setupName: string }
+type SetupList = Array<SetupListEntry>
+
+const setupList = selector<SetupList>({
+  key: 'setupList',
+  get: ({get}) => {
+    const setupIds = get(setupIdList)
+    return setupIds.map(setupId => ({setupId, setupName: get(setupName(setupId))}))      
+  }
+})
+
+export function useSetupList() {
+  return useRecoilValue(setupList)
+}
+
+export function useCreateSetup() {
+
+  const setups = useSetupList();
+  const createProgram = useCreateProgram();
+
+  return useRecoilCallback(({set}) => () => {
+    
+    let n = 1
+    let newName:string
+    do {
+      newName = `new setup ${n++}`
+    } while(setups.some(({setupName}) => newName === setupName))
+
+    const setupId = newId();    
+    set(setupIdList, setupIds => [...setupIds, setupId])
+    set(setupName(setupId), newName)
+
+    const programId = createProgram();
+    set(setupProgramIdList(setupId), [programId])
+
+    return setupId;
+
+  })
+
+}
+
+const setupSpeed = atomFamily<SetupSpeed, SetupId>({
     key: "setupSpeed",
     default: setupId => 120,
-    effects: setupId => [persistAtom(`setupSpeed-${setupId}`)]
+    effects: PERSIST_EFFECTS
 });
 
-export const setupSteps = atomFamily<SetupSpeed, SetupId>({
-    key: "setupSteps",
+const setupStepCount = atomFamily<SetupSpeed, SetupId>({
+    key: "setupStepCount",
     default: setupId => 16,
-    effects: setupId => [persistAtom(`setupSteps-${setupId}`)]
+    effects: PERSIST_EFFECTS
 });
 
-export const setupProgramStepStatusList = atomFamily<SetupProgramStepStatusList, SetupProgramStepStatusListKey>({
-    key: "setupProgramStepStatusList",
-    default: key => [],
-    effects: ({setupId, programId}) => [persistAtom(`setupProgramStepStatusList-${setupId}-${programId}`)]
-});
+export const useSetupStepCount = (setupId:SetupId) => useRecoilValue(setupStepCount(setupId))
 
-export const setupStepStatus = selectorFamily<SetupProgramStepStatus, SetupProgramStepStatusKey>({
+export type SetupStepStatusKey = { setupId: SetupId, programId: ProgramId, actionName:ProgramActionName, stepIndex: SetupStepIndex };
+const setupStepStatus = atomFamily<SetupStepStatus, SetupStepStatusKey>({
     key: "setupStepStatus",
-    get: key => ({get}) => {
-        if(key.stepIndex < 0) throw Error(`Invalid stepIndex ${key.stepIndex} for setupId ${key.setupId} and programId ${key.programId}`);
-        const list = get(setupProgramStepStatusList({setupId: key.setupId, programId: key.programId}));
-        return key.stepIndex < list.length ? false : list[key.stepIndex] ?? false // may have undefined values from extending array below
-    },
-    set: key => ({get, set}, enabled) => {
-        if(key.stepIndex < 0) throw Error(`Invalid stepIndex ${key.stepIndex} for setupId ${key.setupId} and programId ${key.programId}`);
-        const listKey = {setupId: key.setupId, programId: key.programId};
-        const listState = setupProgramStepStatusList(listKey);
-        const oldList = get(listState);
-        const newList = Array.from(oldList);
-        newList[key.stepIndex] = (enabled instanceof DefaultValue) ? false : enabled; // may extend array with "empty" (undefined) values
-        set(listState, newList);
-    }
+    default: key => key.stepIndex === 1 || key.stepIndex === 3,
+    effects: PERSIST_EFFECTS
 });
 
-export const currentSetupId = atom<SetupId>({
+// can you say "Setup Step Status State" five times fast?
+export const useSetupStepStatusState = (key:SetupStepStatusKey) => useRecoilState(setupStepStatus(key))
+
+const isSetupStepActive = atomFamily<SetupStepStatus, SetupStepIndex>({
+    key: "isSetupStepActive",
+    default: false
+})
+
+export const useIsSetupStepActive = (stepIndex:SetupStepIndex) => useRecoilValue(isSetupStepActive(stepIndex))
+export const useSetIsSetupStepActive = () => useRecoilCallback(({set}) => (stepIndex:SetupStepIndex, isActive:boolean) => {
+    set(isSetupStepActive(stepIndex), isActive);
+})
+
+const currentSetupId = atom<SetupId>({
     key: "currentSetupId",
-    default: "TODO",
-    effects: [persistAtom("currentSetupId")]
+    default: "",
+    effects: PERSIST_EFFECTS
 });
 
-export const currentSetupSpeed = selector<SetupSpeed>({
+export const useCurrentSetupId = () => useRecoilValue(currentSetupId);
+export const useSetCurrentSetupId = () => useSetRecoilState(currentSetupId);
+
+const currentSetupSpeed = selector<SetupSpeed>({
     key: "currentSetupSpeed",
     get: ({get}) => {
-        const id = get(currentSetupId)
-        const speed = get(setupSpeed(id))
+        const setupId = get(currentSetupId)
+        const speed = get(setupSpeed(setupId))
         return speed;
+    },
+    set: ({get, set, reset}, speed) => {
+        const setupId = get(currentSetupId)
+        if(speed instanceof DefaultValue) {
+            reset(setupSpeed(setupId))
+        } else {
+            set(setupSpeed(setupId), speed)
+        }
     }
 });
 
-export const currentSetupSteps = selector<SetupSpeed>({
-    key: "currentSetupSteps",
+export const useCurrentSetupSpeed = () => useRecoilValue(currentSetupSpeed)
+export const useSetCurrentSetupSpeed = () => useSetRecoilState(currentSetupSpeed)
+export const useCurrentSetupSpeedState = () => useRecoilState(currentSetupSpeed)
+
+const currentSetupStepCount = selector<SetupStepCount>({
+    key: "currentSetupStepCount",
     get: ({get}) => {
-        const id = get(currentSetupId)
-        const steps = get(setupSteps(id))
-        return steps;
+        const setupId = get(currentSetupId)
+        const stepCount = get(setupStepCount(setupId))
+        return stepCount;
+    },
+    set: ({get, set, reset}, stepCount) => {
+        const setupId = get(currentSetupId)
+        if(stepCount instanceof DefaultValue) {
+            reset(setupStepCount(setupId))
+        } else {
+            set(setupStepCount(setupId), stepCount)
+        }
     }
 });
 
-export const currentSetupProgramIds = selector<ProgramIdList>({
+export const useCurrentSetupStepCount = () => useRecoilValue(currentSetupStepCount)
+export const useSetCurrentSetupStepCount = () => useSetRecoilState(currentSetupStepCount)
+export const useCurrentSetupStepCountState = () => useRecoilState(currentSetupStepCount)
+
+const currentSetupProgramIds = selector<ProgramIdList>({
     key: "currentSetupProgramIds",
     get: ({get}) => {
         const id = get(currentSetupId);
-        const programs = get(setupProgramIds(id))
+        const programs = get(setupProgramIdList(id))
         return programs;
     }
 });
 
-export const currentSetupProgramIdByIndex = selectorFamily<ProgramId, SetupProgramIndex>({
+const currentSetupProgramIdByIndex = selectorFamily<ProgramId, SetupProgramIndex>({
     key: "currentSetupProgramIdByIndex",
     get: programIndex => ({get}) => {
         const ids = get(currentSetupProgramIds);
@@ -113,7 +186,7 @@ export const currentSetupProgramIdByIndex = selectorFamily<ProgramId, SetupProgr
     }
 });
 
-export const selectedProgramIndex = selector<SetupProgramIndex|null>({
+const selectedProgramIndex = selector<SetupProgramIndex|null>({
     key: "selectedProgramIndex",
     get: ({get}) => {
         const id = get(selectedProgramId);
@@ -128,6 +201,7 @@ export const selectedProgramIndex = selector<SetupProgramIndex|null>({
         set(selectedProgramId, id);
     }
 })
+
 
 
 /*

@@ -1,2 +1,3 @@
-export * from './data'      // TODO: make some of this private because exported data
-export * from './dispatch'  // should include readonly selectors...
+export { 
+    StateRoot 
+} from './StateRoot';

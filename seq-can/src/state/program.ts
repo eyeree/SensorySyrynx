@@ -1,10 +1,21 @@
-import { atom, atomFamily, DefaultValue, selector, selectorFamily, useRecoilCallback, useRecoilState } from 'recoil';
-import { newId, persistAtom } from './util';
+import { useRef, useEffect } from 'react';
+import { atom, atomFamily, selector, useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { persistAtom } from './persistance';
+import { newId } from './id';
+import { logAtom } from './log';
+import { SetupStepIndex } from './setup';
+
+const DEFAULT_EFFECTS = [logAtom]
+const PERSIST_EFFECTS = [...DEFAULT_EFFECTS, persistAtom]
 
 export type ProgramId = string;
 export type ProgramCode = string;
 export type ProgramName = string;
 export type ProgramIdList = Array<ProgramId>;
+
+export type ProgramActionName = string;
+export type ProgramActionNameList = Array<ProgramActionName>;
+
 export type ProgramErrorStackEntry = {function:string, line:number, column:number};
 export type ProgramErrorStack = Array<ProgramErrorStackEntry>;
 export type ProgramError = {message:string, stack: ProgramErrorStack};
@@ -26,25 +37,90 @@ return {
 }
 `
 
-export const allProgramIds = atom<ProgramIdList>({
-    key: "allProgramIds",
+const programIdList = atom<ProgramIdList>({
+    key: "programIdList",
     default: [],
-    effects: [persistAtom("allProgramIds")]
+    effects: PERSIST_EFFECTS
 });
 
-export const programCode = atomFamily<ProgramCode, ProgramId>({
+export function useProgramIdList() {
+    return useRecoilValue(programIdList);
+}
+
+type ProgramListEntry = { programId: string, programName: string }
+type ProgramList = Array<ProgramListEntry>
+
+const programList = selector<ProgramList>({
+  key: 'programList',
+  get: ({get}) => {
+    const programIds = get(programIdList)
+    return programIds.map(programId => ({programId, programName: get(programName(programId))}))      
+  }
+})
+
+function useProgramList() {
+  return useRecoilValue(programList)
+}
+
+export function useCreateProgram() {
+
+  const programs = useProgramList();
+
+  return useRecoilCallback(({set}) => () => {
+    
+    let n = 1
+    let newName:string
+    do {
+      newName = `new program ${n++}`
+    } while(programs.some(({programName: name}) => newName === name))
+
+    const programId = newId();    
+    set(programIdList, programIds => [...programIds, programId])
+    set(programName(programId), newName)
+
+    return programId;
+
+  })
+
+}
+
+const programCode = atomFamily<ProgramCode, ProgramId>({
     key: "programCode",
     default: programId => newProgramCode,
-    effects: programId => [persistAtom(`programCode-${programId}`)]
+    effects: PERSIST_EFFECTS
 });
 
-export const programName = atomFamily<ProgramName, ProgramId>({
+export const useProgramCode = (programId:ProgramId) => useRecoilValue(programCode(programId))
+export const useSetProgramCode = (programId:ProgramId) => useSetRecoilState(programCode(programId))
+export const useProgramCodeState = (programId:ProgramId) => useRecoilState(programCode(programId))
+
+
+export type ProgramActionFunctionKey = { programId:ProgramId, actionName:ProgramActionName }
+export type ProgramActionFunction = (stepIndex:SetupStepIndex) => void
+
+const programActionFunction = atomFamily<ProgramActionFunction|null, ProgramActionFunctionKey>({
+    key: "programActionFunction",
+    default: null,
+    effects: DEFAULT_EFFECTS
+})
+
+export const useProgramActionFunction = (key:ProgramActionFunctionKey) => useRecoilValue(programActionFunction(key))
+export const useSetProgramActionFunction = (key:ProgramActionFunctionKey) => useSetRecoilState(programActionFunction(key))
+
+const programName = atomFamily<ProgramName, ProgramId>({
     key: "programName",
     default: programId => "New Program",
-    effects: programId => [persistAtom(`programName-${programId}`)]
+    effects: PERSIST_EFFECTS
 });
 
-export const programError = atomFamily<ProgramError|null, ProgramId>({
+const programActionList = atomFamily<ProgramActionNameList, ProgramId>({
+    key: "programActionList",
+    default: programId => ["step"],
+});
+
+export const useProgramActions = (programId:ProgramId) => useRecoilValue(programActionList(programId))
+
+const programError = atomFamily<ProgramError|null, ProgramId>({
     key: "programError",
     default: programId => null
 });
@@ -52,10 +128,10 @@ export const programError = atomFamily<ProgramError|null, ProgramId>({
 export const selectedProgramId = atom<ProgramId>({
     key: "selectedProgramId",
     default: "TODO",
-    effects: [persistAtom("selectedProgramId")]
+    effects: PERSIST_EFFECTS
 });
 
-export const selectedProgramCode = selector<ProgramCode>({
+const selectedProgramCode = selector<ProgramCode>({
     key: "selectedProgramCode",
     get: ({get}) => {
         const id = get(selectedProgramId);
@@ -68,7 +144,7 @@ export const selectedProgramCode = selector<ProgramCode>({
     }
 });
 
-export const selectedProgramError = selector<ProgramError|null>({
+const selectedProgramError = selector<ProgramError|null>({
     key: "selectedProgramError",
     get: ({get}) => {
         const id = get(selectedProgramId);
@@ -81,7 +157,7 @@ export const selectedProgramError = selector<ProgramError|null>({
     }
 });
 
-export const selectedProgramName = selector<ProgramName>({
+const selectedProgramName = selector<ProgramName>({
     key: "selectedProgramName",
     get: ({get}) => {
         const id = get(selectedProgramId);
@@ -105,104 +181,3 @@ setProgramError
 clearProgramError
 
 */
-
-
-export const createDispatcher = () => {
-
-    const createProgram = useRecoilCallback<[], ProgramId>(
-        ({ set }) =>
-            () => {
-
-                return "TODO";
-            }
-    )
-    
-    // const logMessage = useRecoilCallback<[string], void>(
-    //   ({ set }) =>
-    //     (message: string) => {
-    //       console.log(`${message}`);
-    //       set(logEntryListState, (logEntries) => [...logEntries, message]);
-    //     }
-    // );
-  
-    // const addItem = useRecoilCallback<[string], void>(
-    //   ({ set }) =>
-    //     (text: string) => {
-    //       const newTodoItem = {
-    //         id: getId(),
-    //         text,
-    //         isComplete: false,
-    //       };
-    //       set(todoListState, (oldTodoList: TodoItem[]) => [
-    //         ...oldTodoList,
-    //         newTodoItem,
-    //       ]);
-    //       logMessage(`To Do: ${text} added`);
-    //     }
-    // );
-  
-    // const deleteItem = useRecoilCallback(
-    //   ({ snapshot, set }) =>
-    //     async (index: number) => {
-    //       let todoList = await snapshot.getPromise(todoListState);
-  
-    //       if (index < 0 || index >= todoList.length) {
-    //         throw new Error("Could not delete item. Index out of bounds.");
-    //       }
-  
-    //       const foundItem = todoList[index];
-  
-    //       if (foundItem) {
-    //         set(todoListState, (oldTodoList: TodoItem[]) => {
-    //           return removeItemAtIndex(oldTodoList, index);
-    //         });
-  
-    //         set(toDoRecycleBinState, (oldRecycleList: TodoItem[]) => {
-    //           return [...oldRecycleList, foundItem];
-    //         });
-    //         logMessage(`Todo: \"${foundItem?.text}\" moved to recycle bin.`);
-    //       }
-    //     }
-    // );
-  
-    // const restoreItem = useRecoilCallback(
-    //   ({ snapshot, set }) =>
-    //     async (index: number) => {
-    //       let recycleList = await snapshot.getPromise(toDoRecycleBinState);
-  
-    //       if (index < 0 || index >= recycleList.length) {
-    //         throw new Error("Could not restore item. Index out of bounds.");
-    //       }
-  
-    //       const foundItem = recycleList[index];
-  
-    //       if (foundItem) {
-    //         set(toDoRecycleBinState, (oldRecycleList: TodoItem[]) => {
-    //           return removeItemAtIndex(oldRecycleList, index);
-    //         });
-  
-    //         set(todoListState, (oldTodoList: TodoItem[]) => [
-    //           ...oldTodoList,
-    //           foundItem,
-    //         ]);
-  
-    //         logMessage(`Todo: \"${foundItem.text}\" restored from recycle bin.`);
-    //       }
-    //     }
-    // );
-  
-    // const emptyRecycleBin = useRecoilCallback(({ reset }) => () => {
-    //   reset(toDoRecycleBinState);
-    //   logMessage(`Recycle bin emptied.`);
-    // });
-  
-    // return {
-    //   logMessage,
-    //   addItem,
-    //   deleteItem,
-    //   restoreItem,
-    //   emptyRecycleBin,
-    // };
-  };
-  
-  export type Dispatcher = ReturnType<typeof createDispatcher>;

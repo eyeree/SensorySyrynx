@@ -60,19 +60,18 @@ export const codeState = atom({
     ]
 })
 
-// export const compiledCodeState = selector<ProgramFunction|Error>({
-//     key: "Editor_CompiledCode",
-//     get: ({get}) => {
-//         const code = get(codeState);
-//         try {
-//             const source = getWrapperSource(code);
-//             const factory = new Function(source); // eslint-disable-line no-new-func
-//             return factory();
-//         } catch (e: any) {
-//             return e;
-//         }
-//     }
-// })
+export const compiledCodeState = selector<ProgramFunction|Error>({
+    key: "Editor_CompiledCode",
+    get: ({get}) => {
+        console.log("Editor_CompiledCode")
+        const code = get(codeState);
+        try {
+            return getFactoryFunction(code);
+        } catch (e: any) {
+            return e;
+        }
+    }
+})
 
 // function getWrapperSource(code:string) {
 //     return     
@@ -124,14 +123,14 @@ export function CodeEditor() {
                     timer = setTimeout(() => {
                         const code = v.state.doc.toString();
                         set(codeState, code)
-                        try {
-                            const fn = getFactoryFunction(code);
-                            Program.getProgram().setFactoryFunction(fn);
-                            set(errorState, null);
-                        } catch (e: any) {
-                            Program.getProgram().setFactoryFunction(null);
-                            set(errorState, getErrorState(e))
-                        }
+                        // try {
+                        //     const fn = getFactoryFunction(code);
+                        //     Program.getProgram().setFactoryFunction(fn);
+                        //     set(errorState, null);
+                        // } catch (e: any) {
+                        //     Program.getProgram().setFactoryFunction(null);
+                        //     set(errorState, getErrorState(e))
+                        // }
                     }, 500);
                   }
                 }

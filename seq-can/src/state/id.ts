@@ -3,10 +3,3 @@
 // an user, so no increased probability.
 import { customAlphabet } from 'nanoid'
 export const newId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 10)
-
-import { recoilPersist } from 'recoil-persist'
-export function persistAtom(key:string) {
-    const { persistAtom } = recoilPersist({key: 'seq-can'})
-    return persistAtom;
-}
-

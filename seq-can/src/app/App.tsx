@@ -4,11 +4,11 @@ import { css } from '@emotion/react'
 import {Canvas} from '../canvas';
 import {Editor} from '../editor';
 import {Sequencer} from '../sequencer';
+import {StateRoot} from '../state';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import {flexRow, flexColumn} from '../common/css';
 import { createTheme, ThemeProvider } from '@mui/material';
-import { RecoilRoot } from 'recoil';
 
 const appCSS = css(  
   flexRow,
@@ -49,7 +49,7 @@ const theme = createTheme({
 export function App() {
 
   return (
-    <RecoilRoot>
+    <StateRoot>
       <ThemeProvider theme={theme}>
         <CssBaseline enableColorScheme={true}/>
         <div css={appCSS}>
@@ -60,7 +60,7 @@ export function App() {
           <div css={editorCSS}><Editor/></div>
         </div>
       </ThemeProvider>
-    </RecoilRoot>
+    </StateRoot>
   )
 
 }

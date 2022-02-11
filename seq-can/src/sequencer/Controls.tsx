@@ -1,16 +1,17 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react'
+import { useState } from 'react';
 
 import SpeedIcon from '@mui/icons-material/Speed';
 import StraightenIcon from '@mui/icons-material/Straighten';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
-
 import { Slider } from '@mui/material';
 
 import { flexColumn, flexRow } from "../common/css";
+import { useInterval } from '../common/interval';
 
-import { atom, useRecoilState } from 'recoil';
+import { useCurrentSetupSpeedState, useCurrentSetupStepCountState, useSetIsSetupStepActive } from '../state/setup';
 
 const container = css(
     flexColumn,
@@ -37,37 +38,42 @@ const slider = css(
 
 const sliderValue = (v:number|number[]) => Array.isArray(v) ? v[0] : v;
 
-export const sequencerSpeed = atom({
-    key: 'Sequencer-Speed', 
-    default: 120
-});
-
-export const sequencerSteps = atom({
-    key: 'Sequencer-Steps', 
-    default: 8
-});
-
-export const sequencerPaused = atom({
-    key: 'Sequencer-Paused',
-    default: false
-});
-
 const pauseCSS = css({
     cursor: 'pointer'
 })
 
+type TickerProps = {speed:number, steps:number, paused:boolean}
+const Ticker = ({speed, steps, paused}:TickerProps) => {
+
+    const setIsStepActive = useSetIsSetupStepActive();
+    const [step, setStep] = useState(0);
+
+    const tick = () => {       
+        if(paused) return;
+        setIsStepActive(step, false);
+        const next = step >= steps-1 ? 0 : step + 1;
+        setIsStepActive(next, true);
+        setStep(next);
+    }
+    
+    const time = 60000 / speed;
+    useInterval(tick, time);
+
+    return <></>
+
+}
+
 export function Controls() {
 
-    const [speed, setSpeed] = useRecoilState(sequencerSpeed);
-    const [steps, setSteps] = useRecoilState(sequencerSteps);
-    const [paused, setPaused] = useRecoilState(sequencerPaused);
+    const [speed, setSpeed] = useCurrentSetupSpeedState();
+    const [steps, setSteps] = useCurrentSetupStepCountState();
 
-    const togglePaused = () => {
-        setPaused(!paused);
-    }
+    const [paused, setPaused] = useState(false);
+    const togglePaused = () => setPaused(!paused)
     
     return (
         <div css={container}>
+            <Ticker paused={paused} speed={speed} steps={steps}/>
             <div css={row}>
                 <SpeedIcon/>
                 <Slider css={slider} valueLabelDisplay="auto" aria-label="Speed" value={speed} min={10} max={300} onChange={(e, v) => setSpeed(sliderValue(v))}/>

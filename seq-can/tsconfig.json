@@ -23,5 +23,5 @@
   },
   "include": [
     "src"
-  ]
+, "tmp/data.ts"  ]
 }
