@@ -15,7 +15,7 @@ function Initializer() {
     const setCurrentSetupId = useSetCurrentSetupId();
   
     useEffect(() => {
-      if(setupList.length == 0) {
+      if(setupList.length === 0) {
         const setupId = createSetup();
         setCurrentSetupId(setupId);
       }

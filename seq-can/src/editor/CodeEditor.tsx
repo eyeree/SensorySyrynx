@@ -22,7 +22,7 @@ type CodeEditorProps = { programId:ProgramId }
 export function CodeEditor({programId}:CodeEditorProps) {
 
     const selectedProgramId = useSelectedProgramId();
-    const isSelected = selectedProgramId == programId;
+    const isSelected = selectedProgramId === programId;
     const [code, setCode] = useProgramCodeState(programId)
     const editor = useRef<HTMLDivElement>(null);
 

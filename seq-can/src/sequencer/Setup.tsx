@@ -3,7 +3,7 @@ import { css } from '@emotion/react'
 import { useEffect, useState } from 'react';
 import { arrayOf } from '../common/array';
 
-import { flexRow, flexColumn } from '../common/css';
+import { flexRow } from '../common/css';
 import { usePrevious } from '../common/previous';
 import { ActionList, ActionListEntry, Runtime } from '../runtime/runtime';
 import { ProgramId, useProgramName, useProgramCode, useSetSelectedProgramId, useSetSelectedProgramError, ProgramErrorNullable } from '../state/program';
@@ -112,7 +112,7 @@ function ProgramStatus({programId, programIndex, programError}:ProgramStatusProp
     const [selectedProgramIndex, setSelectedProgramIndex] = useSelectedProgramIndexState();
     const setSelectedProgramId = useSetSelectedProgramId();
     const setSelectedProgramError = useSetSelectedProgramError();
-    const isSelected = selectedProgramIndex == programIndex;
+    const isSelected = selectedProgramIndex === programIndex;
 
     console.log("ProgramStatus", programId, programIndex, programError, isSelected);
 
@@ -122,7 +122,7 @@ function ProgramStatus({programId, programIndex, programError}:ProgramStatusProp
             setSelectedProgramError(programError);
             setSelectedProgramId(programId);
         }    
-    }, [isSelected, programError, programId])
+    }, [isSelected, programError, programId, setSelectedProgramError, setSelectedProgramId])
 
     let color;
     if(programError) {
