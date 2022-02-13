@@ -5,10 +5,18 @@ import { arrayOf } from '../common/array';
 
 import { flexRow } from '../common/css';
 import { usePrevious } from '../common/previous';
-import { ActionList, ActionListEntry, Runtime } from '../runtime/runtime';
+import { ActionList, ActionListEntry, Runtime } from '../runtime';
 import { ProgramId, useProgramName, useProgramCode, useSetSelectedProgramId, useSetSelectedProgramError, ProgramErrorNullable } from '../state/program';
 import { StepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, ProgramIndex, useSelectedProgramIndexState } from '../state/setup';
-import { stepCSS } from './css';
+
+const stepCSS = css({
+    width: 10,
+    height: 20,
+    margin: 1,
+    borderWidth: 1,
+    borderColor: 'black',
+    borderStyle: 'solid',
+})
 
 const programStepCommonCSS = css(
     stepCSS,

@@ -12,7 +12,7 @@ import { flexColumn, flexRow } from "../common/css";
 import { useInterval } from '../common/interval';
 
 import { useCurrentSetupBPMState, useCurrentSetupStepCountState, useSetIsSetupStepActive } from '../state/setup';
-import { Runtime } from '../runtime/runtime';
+import { Runtime } from '../runtime';
 
 const container = css(
     flexColumn,

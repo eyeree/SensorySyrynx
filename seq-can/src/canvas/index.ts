@@ -1,1 +1,0 @@
-export {Canvas, addToStage, removeFromStage, bounds} from './Canvas'

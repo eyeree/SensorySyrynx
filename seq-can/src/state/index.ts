@@ -1,3 +1,0 @@
-export { 
-    StateRoot 
-} from './StateRoot';
