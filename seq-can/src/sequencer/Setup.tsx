@@ -82,23 +82,23 @@ function ActionStep({setupId, programId, action, stepIndex}:ActionStepProps) {
 
 }
 
-const actionNameCSS = css({
-    width: 70
-})
+const statusDotSize = 10;
+const statusDotMargin = 2;
+const statusDotWidth = statusDotSize + statusDotMargin;
+const actionIndent = statusDotWidth * 1.5
+
 
 type ActionProps = {setupId:SetupId, programId:ProgramId, action:ActionListEntry}
 function Action({setupId, programId, action}:ActionProps) {
     const stepCount = useSetupStepCount(setupId);
-    return (
+    return <>
+        <div css={css({marginLeft: actionIndent, marginRight: 2})}>{action.name}</div>
         <div css={flexRow}>
-            <div css={actionNameCSS}>{action.name}</div>
-            <div css={flexRow}>
-                {arrayOf(stepCount, stepIndex => 
-                    <ActionStep key={stepIndex} setupId={setupId} programId={programId} action={action} stepIndex={stepIndex}/>
-                )}
-            </div>
+            {arrayOf(stepCount, stepIndex => 
+                <ActionStep key={stepIndex} setupId={setupId} programId={programId} action={action} stepIndex={stepIndex}/>
+            )}
         </div>
-    )
+    </>
 }
 
 type ProgramNameProps = {programId:ProgramId}
@@ -106,10 +106,6 @@ function ProgramName({programId}:ProgramNameProps) {
     const programName = useProgramName(programId);
     return <div>{programName}</div>
 }
-
-const statusDotSize = 10;
-const statusDotMargin = 2;
-const statusDotWidth = statusDotSize + statusDotMargin;
 
 type ProgramStatusProps = {programId:ProgramId, programIndex:SetupProgramIndex, programError:ProgramErrorNullable}
 function ProgramStatus({programId, programIndex, programError}:ProgramStatusProps) {
@@ -159,21 +155,13 @@ function ProgramStatus({programId, programIndex, programError}:ProgramStatusProp
 
 type ProgramInfoProps = {programId:ProgramId, programIndex:SetupProgramIndex, programError:ProgramErrorNullable}
 function ProgramInfo({programId, programError, programIndex}:ProgramInfoProps) {
-    return <div css={flexRow}>
+    return <div css={css(flexRow, {
+        gridColumn: "1 / 3",
+    })}>
         <ProgramStatus programId={programId} programIndex={programIndex} programError={programError}/>
         <ProgramName programId={programId}/>
     </div>
 }
-
-
-const actionIndent = statusDotWidth * 1.5
-
-const actionsCSS = css(
-    flexColumn,
-    {
-        paddingLeft: actionIndent
-    }
-)
 
 type ProgramProps = {setupId:SetupId, programId:ProgramId, programIndex:SetupProgramIndex}
 function Program({setupId, programId, programIndex}:ProgramProps) {
@@ -210,20 +198,21 @@ function Program({setupId, programId, programIndex}:ProgramProps) {
         // we know that runtime will never change, only need to track code changes
     )
 
-    return <div css={flexColumn}>
+    return <>
         <ProgramInfo programId={programId} programError={programError} programIndex={programIndex}/>
-        <div css={actionsCSS}>
-            {actions.map(action => 
-                <Action key={action.name} setupId={setupId} programId={programId} action={action}/>
-            )}
-        </div>
-    </div>
+        {actions.map(action => 
+            <Action key={action.name} setupId={setupId} programId={programId} action={action}/>
+        )}
+    </>
     
 }
 
 const setupCSS = css(
-    flexColumn,
     {
+        gridTemplateColumns: ["min-content"],
+        display: "grid",
+        overflow: "auto",
+        width: "100%"
     }
 )
 
