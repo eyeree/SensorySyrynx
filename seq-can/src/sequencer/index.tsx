@@ -5,17 +5,18 @@ import { Controls } from './Controls';
 import { Setup } from './Setup';
 
 import { flexRow } from "../common/css";
+import { Paper } from '@mui/material';
 
 const container = css(
     flexRow,
     {
-        height: "100%"
+        // height: "100%"
     }
 )
 
 export function Sequencer() {
-    return <div css={container}>
+    return <Paper css={container} elevation={6} sx={{margin: 1}}>
         <Controls/>
         <Setup/>
-    </div>
+    </Paper>
 }

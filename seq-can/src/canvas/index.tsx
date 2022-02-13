@@ -35,7 +35,15 @@ export const bounds:Bounds = {
 
 const canvasCSS = css(
   {
-    backgroundColor: "black",   
+    backgroundColor: "black",
+    width: "100%",
+    height: "100%"
+  }
+);
+
+const containerCSS = css(
+  {
+    backgroundColor: "pink",
     width: 1280,
     height: 1024
   }
@@ -85,7 +93,7 @@ export function Canvas(props:CanvasProps) {
       }
   }, []);
 
-  return <canvas css={canvasCSS} ref={canvasRef} {...props}/>;
+  return <div css={containerCSS}><canvas css={canvasCSS} ref={canvasRef}/></div>;
 
 }
 

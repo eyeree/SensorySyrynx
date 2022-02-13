@@ -17,7 +17,7 @@ import { Runtime } from '../runtime';
 const container = css(
     flexColumn,
     {
-        justifyContent: 'space-around',
+        justifyContent: 'flex-start',
     }
 )
 

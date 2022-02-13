@@ -7,8 +7,8 @@ import {Sequencer} from '../sequencer';
 import {StateRoot} from '../state';
 import CssBaseline from '@mui/material/CssBaseline';
 
-import {flexRow, flexColumn} from '../common/css';
-import { createTheme, ThemeProvider } from '@mui/material';
+import {flexRow, flexColumn, theme} from '../common/css';
+import { createTheme, Paper, ThemeOptions, ThemeProvider } from '@mui/material';
 
 const appCSS = css(  
   flexRow,
@@ -24,15 +24,16 @@ const mainCSS = css(
 )
 
 const editorCSS = css({
-  padding: 4,
-  paddingLeft: 0,
+  // padding: 4,
+  // paddingLeft: 0,
   flexGrow:1,
   minWidth: 500,
 })
 
 const canvasCSS = css({
-  border: "gray ridge 12px",
-  margin: 4,
+  // border: "gray ridge 12px",
+  // margin: 4,
+  backgroundColor: "red",
 })
 
 const sequencerCSS = css({
@@ -40,25 +41,19 @@ const sequencerCSS = css({
   minHeight: 100,
 })
 
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
-
 export function App() {
 
   return (
     <StateRoot>
       <ThemeProvider theme={theme}>
         <CssBaseline enableColorScheme={true}/>
-        <div css={appCSS}>
+        <Paper css={appCSS} sx={{}}>
           <div css={mainCSS}>
-            <div css={canvasCSS}><Canvas/></div>
+            <Paper elevation={6} sx={{margin:1, padding:1}}><Canvas/></Paper>
             <div css={sequencerCSS}><Sequencer/></div>
           </div>
           <div css={editorCSS}><Editor/></div>
-        </div>
+        </Paper>
       </ThemeProvider>
     </StateRoot>
   )

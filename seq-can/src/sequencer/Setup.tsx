@@ -1,9 +1,9 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react'
+import { Paper } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { arrayOf } from '../common/array';
-
-import { flexRow } from '../common/css';
+import { theme, flexRow } from '../common/css';
 import { usePrevious } from '../common/previous';
 import { ActionList, ActionListEntry, Runtime } from '../runtime';
 import { ProgramId, useProgramName, useProgramCode, useSetSelectedProgramId, useSetSelectedProgramError, ProgramErrorNullable } from '../state/program';
@@ -90,17 +90,15 @@ function ActionStep({setupId, programId, action, stepIndex}:ActionStepProps) {
 
 }
 
-const statusDotSize = 10;
-const statusDotMargin = 2;
-const statusDotWidth = statusDotSize + statusDotMargin;
-const actionIndent = statusDotWidth * 1.5
-
+const statusDotSize = theme.spacing(1.5)
+const statusDotMargin = theme.spacing(1)
+const actionIndent = theme.spacing(4)
 
 type ActionProps = {setupId:SetupId, programId:ProgramId, action:ActionListEntry}
 function Action({setupId, programId, action}:ActionProps) {
     const stepCount = useSetupStepCount(setupId);
     return <>
-        <div css={css({marginLeft: actionIndent, marginRight: 2})}>{action.name}</div>
+        <div css={css({marginLeft: actionIndent, marginRight: statusDotMargin})}>{action.name}</div>
         <div css={flexRow}>
             {arrayOf(stepCount, stepIndex => 
                 <ActionStep key={stepIndex} setupId={setupId} programId={programId} action={action} stepIndex={stepIndex}/>
@@ -210,7 +208,8 @@ function Program({setupId, programId, programIndex}:ProgramProps) {
 
 const setupCSS = css(
     {
-        gridTemplateColumns: ["min-content"],
+        gridAutoColumns: "min-content",
+        gridAutoRows: "min-content",
         display: "grid",
         overflow: "auto",
         width: "100%"
@@ -220,10 +219,10 @@ const setupCSS = css(
 export function Setup() {
     const setupId = useCurrentSetupId();
     const programIds = useSetupProgramIdList(setupId);
-    return <div css={setupCSS}>
+    return <Paper css={setupCSS} elevation={6} sx={{padding:1}}>
         {programIds.map((programId, programIndex) => 
             <Program key={programIndex} setupId={setupId} programId={programId} programIndex={programIndex}/>
         )}
-    </div>
+    </Paper>
 }
 
