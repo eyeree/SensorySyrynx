@@ -114,10 +114,7 @@ function ProgramStatus({programId, programIndex, programError}:ProgramStatusProp
     const setSelectedProgramError = useSetSelectedProgramError();
     const isSelected = selectedProgramIndex === programIndex;
 
-    console.log("ProgramStatus", programId, programIndex, programError, isSelected);
-
     useEffect(() => {
-        console.log("ProgramStatus useEffect isSelected", isSelected)
         if(isSelected) {
             setSelectedProgramError(programError);
             setSelectedProgramId(programId);
@@ -171,11 +168,8 @@ function Program({setupId, programId, programIndex}:ProgramProps) {
     const [runtime, setRuntime] = useState<Runtime>()
     const [actions, setActions] = useState<ActionList>([])
 
-    console.log("Program", setupId, programId, programIndex, programError);
-
     useEffect(
         () => {
-            console.log("Program useEffect set runtime")
             const runtime = new Runtime(code, setProgramError);
             setActions(runtime.actions);
             setRuntime(runtime);
@@ -188,7 +182,6 @@ function Program({setupId, programId, programIndex}:ProgramProps) {
 
     useEffect(
         () => { 
-            console.log("Program useEffect set code");
             if(runtime) {
                 runtime.setCode(code)
                 setActions(runtime.actions);
