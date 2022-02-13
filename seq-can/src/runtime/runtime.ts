@@ -4,7 +4,7 @@ import createjs from 'eyeree-createjs-module';
 import Container = createjs.Container;
 import Graphics = createjs.Graphics;
 import { Bounds } from '../canvas/Canvas';
-import { ProgramActionName, ProgramCode, ProgramErrorNullable } from '../state/program';
+import { ActionName, ProgramCode, ProgramErrorNullable } from '../state/program';
 
 export type SequencerInfo = {
     stepCount:number,
@@ -65,7 +65,7 @@ export type ProgramReturn = undefined | ActionFunction | ProgramProps;
 export type ProgramFunction = (args:ProgramArgs) => ProgramReturn;
 
 export type ActionListEntry = {
-    name:ProgramActionName,
+    name:ActionName,
     fn:ActionFunction
 }
 

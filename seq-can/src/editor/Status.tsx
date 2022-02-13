@@ -9,8 +9,6 @@ export function Status() {
 
     const error = useSelectedProgramError();
 
-    console.log("Status", error);
-
     let errorText = "";
     if (error) {
         if (error.line === 0 || error.column === 0) {

@@ -30,7 +30,6 @@ const statusCSS = css({
 })
 
 export function Editor() {
-    console.log("Editor");
 
     const setupId = useCurrentSetupId();
     const programIdList = useSetupProgramIdList(setupId);
@@ -46,4 +45,5 @@ export function Editor() {
             </div>
         </div>
     );
+    
 }

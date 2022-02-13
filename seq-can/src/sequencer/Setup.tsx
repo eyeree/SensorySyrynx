@@ -7,7 +7,7 @@ import { flexRow } from '../common/css';
 import { usePrevious } from '../common/previous';
 import { ActionList, ActionListEntry, Runtime } from '../runtime/runtime';
 import { ProgramId, useProgramName, useProgramCode, useSetSelectedProgramId, useSetSelectedProgramError, ProgramErrorNullable } from '../state/program';
-import { SetupStepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, SetupProgramIndex, useSelectedProgramIndexState } from '../state/setup';
+import { StepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, ProgramIndex, useSelectedProgramIndexState } from '../state/setup';
 import { stepCSS } from './css';
 
 const programStepCommonCSS = css(
@@ -61,7 +61,7 @@ function getProgramStepCSS(active:boolean, enabled:boolean) {
     }
 }
 
-type ActionStepProps = {setupId: SetupId, programId:ProgramId, action:ActionListEntry, stepIndex:SetupStepIndex}
+type ActionStepProps = {setupId: SetupId, programId:ProgramId, action:ActionListEntry, stepIndex:StepIndex}
 function ActionStep({setupId, programId, action, stepIndex}:ActionStepProps) {
 
     const [enabled, setEnabled] = useSetupStepStatusState({setupId, programId, actionName:action.name, stepIndex});
@@ -107,7 +107,7 @@ function ProgramName({programId}:ProgramNameProps) {
     return <div>{programName}</div>
 }
 
-type ProgramStatusProps = {programId:ProgramId, programIndex:SetupProgramIndex, programError:ProgramErrorNullable}
+type ProgramStatusProps = {programId:ProgramId, programIndex:ProgramIndex, programError:ProgramErrorNullable}
 function ProgramStatus({programId, programIndex, programError}:ProgramStatusProps) {
     const [selectedProgramIndex, setSelectedProgramIndex] = useSelectedProgramIndexState();
     const setSelectedProgramId = useSetSelectedProgramId();
@@ -150,7 +150,7 @@ function ProgramStatus({programId, programIndex, programError}:ProgramStatusProp
 
 }
 
-type ProgramInfoProps = {programId:ProgramId, programIndex:SetupProgramIndex, programError:ProgramErrorNullable}
+type ProgramInfoProps = {programId:ProgramId, programIndex:ProgramIndex, programError:ProgramErrorNullable}
 function ProgramInfo({programId, programError, programIndex}:ProgramInfoProps) {
     return <div css={css(flexRow, {
         gridColumn: "1 / 3",
@@ -160,7 +160,7 @@ function ProgramInfo({programId, programError, programIndex}:ProgramInfoProps) {
     </div>
 }
 
-type ProgramProps = {setupId:SetupId, programId:ProgramId, programIndex:SetupProgramIndex}
+type ProgramProps = {setupId:SetupId, programId:ProgramId, programIndex:ProgramIndex}
 function Program({setupId, programId, programIndex}:ProgramProps) {
 
     const code = useProgramCode(programId);

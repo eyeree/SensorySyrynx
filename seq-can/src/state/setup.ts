@@ -1,25 +1,25 @@
 import { atom, atomFamily, DefaultValue, selector, useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { persistAtom } from './persistance';
 
-import { ProgramActionName, ProgramId, ProgramIdList, useCreateProgram } from './program'
+import { ActionName, ProgramId, ProgramIdList, useCreateProgram } from './program'
 import { newId } from './id';
 
 // import { logAtom } from './log';
 
 export type SetupId = string;
-export type SetupSpeed = number;
+export type SetupBPM = number;
 export type SetupStepCount = number;
 export type SetupName = string;
 export type SetupIdList = Array<SetupId>;
-
-export type SetupStepIndex = number;
-export type SetupStepStatus = boolean;
-export type SetupStepStatusList = Array<SetupStepStatus>
-export type SetupProgramIndex = number;
 export type SetupListEntry = { setupId: string, setupName: string }
 export type SetupList = Array<SetupListEntry>
 
-export type SetupStepStatusKey = { setupId: SetupId, programId: ProgramId, actionName:ProgramActionName, stepIndex: SetupStepIndex };
+export type StepIndex = number;
+export type StepStatus = boolean;
+export type StepStatusList = Array<StepStatus>
+export type StepStatusKey = { setupId: SetupId, programId: ProgramId, actionName:ActionName, stepIndex: StepIndex };
+
+export type ProgramIndex = number;
 
 const setupIdList = atom<SetupIdList>({
     key: "setupIdList",
@@ -47,24 +47,24 @@ const setupList = selector<SetupList>({
   }
 })
 
-const setupSpeed = atomFamily<SetupSpeed, SetupId>({
+const setupSpeed = atomFamily<SetupBPM, SetupId>({
     key: "setupSpeed",
     default: setupId => 120,
     effects: [persistAtom]
 });
 
-const setupStepCount = atomFamily<SetupSpeed, SetupId>({
+const setupStepCount = atomFamily<SetupStepCount, SetupId>({
     key: "setupStepCount",
     default: setupId => 16,
     effects: [persistAtom]
 });
 
-const isSetupStepActive = atomFamily<SetupStepStatus, SetupStepIndex>({
+const isSetupStepActive = atomFamily<StepStatus, StepIndex>({
     key: "isSetupStepActive",
     default: false
 })
 
-const selectedProgramIndex = atom<SetupProgramIndex>({
+const selectedProgramIndex = atom<ProgramIndex>({
     key: "selectedProgramIndex",
     default: 0
 })
@@ -75,8 +75,8 @@ const currentSetupId = atom<SetupId>({
     effects: [persistAtom]
 });
 
-const currentSetupSpeed = selector<SetupSpeed>({
-    key: "currentSetupSpeed",
+const currentSetupBPM = selector<SetupBPM>({
+    key: "currentSetupBPM",
     get: ({get}) => {
         const setupId = get(currentSetupId)
         const speed = get(setupSpeed(setupId))
@@ -109,7 +109,7 @@ const currentSetupStepCount = selector<SetupStepCount>({
     }
 });
 
-const setupStepStatus = atomFamily<SetupStepStatus, SetupStepStatusKey>({
+const setupStepStatus = atomFamily<StepStatus, StepStatusKey>({
     key: "setupStepStatus",
     default: false,
     effects: [persistAtom]
@@ -121,10 +121,10 @@ export const useSetupList = () => useRecoilValue(setupList)
 
 export const useSetupStepCount = (setupId:SetupId) => useRecoilValue(setupStepCount(setupId))
 
-export const useSetupStepStatusState = (key:SetupStepStatusKey) => useRecoilState(setupStepStatus(key))
+export const useSetupStepStatusState = (key:StepStatusKey) => useRecoilState(setupStepStatus(key))
 
-export const useIsSetupStepActive = (stepIndex:SetupStepIndex) => useRecoilValue(isSetupStepActive(stepIndex))
-export const useSetIsSetupStepActive = () => useRecoilCallback(({set}) => (stepIndex:SetupStepIndex, isActive:boolean) => {
+export const useIsSetupStepActive = (stepIndex:StepIndex) => useRecoilValue(isSetupStepActive(stepIndex))
+export const useSetIsSetupStepActive = () => useRecoilCallback(({set}) => (stepIndex:StepIndex, isActive:boolean) => {
     set(isSetupStepActive(stepIndex), isActive);
 })
 
@@ -136,7 +136,7 @@ export const useSetCurrentSetupId = () => useRecoilCallback(({set}) => (setupId:
     set(selectedProgramIndex, 0);
 });
 
-export const useCurrentSetupSpeedState = () => useRecoilState(currentSetupSpeed)
+export const useCurrentSetupBPMState = () => useRecoilState(currentSetupBPM)
 
 export const useCurrentSetupStepCount = () => useRecoilValue(currentSetupStepCount)
 export const useCurrentSetupStepCountState = () => useRecoilState(currentSetupStepCount)

@@ -11,7 +11,7 @@ import { Slider } from '@mui/material';
 import { flexColumn, flexRow } from "../common/css";
 import { useInterval } from '../common/interval';
 
-import { useCurrentSetupSpeedState, useCurrentSetupStepCountState, useSetIsSetupStepActive } from '../state/setup';
+import { useCurrentSetupBPMState, useCurrentSetupStepCountState, useSetIsSetupStepActive } from '../state/setup';
 import { Runtime } from '../runtime/runtime';
 
 const container = css(
@@ -66,7 +66,7 @@ const Ticker = ({speed, steps, paused}:TickerProps) => {
 
 export function Controls() {
 
-    const [speed, setSpeed] = useCurrentSetupSpeedState();
+    const [speed, setSpeed] = useCurrentSetupBPMState();
     const [steps, setSteps] = useCurrentSetupStepCountState();
 
     const [paused, setPaused] = useState(false);

@@ -8,9 +8,11 @@ export type ProgramId = string;
 export type ProgramCode = string;
 export type ProgramName = string;
 export type ProgramIdList = Array<ProgramId>;
+export type ProgramListEntry = { programId: string, programName: string }
+export type ProgramList = Array<ProgramListEntry>
 
-export type ProgramActionName = string;
-export type ProgramActionNameList = Array<ProgramActionName>;
+export type ActionName = string;
+export type ActionNameList = Array<ActionName>;
 
 export type ProgramError = { message: string, line: number, column: number };
 export type ProgramErrorNullable = ProgramError | null;
@@ -49,9 +51,6 @@ const programIdList = atom<ProgramIdList>({
     default: [],
     effects: [persistAtom]
 });
-
-type ProgramListEntry = { programId: string, programName: string }
-type ProgramList = Array<ProgramListEntry>
 
 const programList = selector<ProgramList>({
     key: 'programList',

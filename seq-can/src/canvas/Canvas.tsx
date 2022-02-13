@@ -5,17 +5,7 @@ import React from 'react'
 import createjs from 'eyeree-createjs-module';
 import DisplayObject = createjs.DisplayObject;
 
-export type CanvasProps = {}
-
-const canvasCSS = css(
-  {
-    backgroundColor: "black",   
-    width: 1280,
-    height: 1024
-  }
-);
-
-export let stage:createjs.Stage;
+let stage:createjs.Stage;
 
 export function addToStage(...children:createjs.DisplayObject[]) {
   stage!.addChild(...children);
@@ -43,6 +33,15 @@ export const bounds:Bounds = {
   }
 }
 
+const canvasCSS = css(
+  {
+    backgroundColor: "black",   
+    width: 1280,
+    height: 1024
+  }
+);
+
+export type CanvasProps = {}
 export function Canvas(props:CanvasProps) {
 
   const resizeObserver = React.useRef(new ResizeObserver((entries:ResizeObserverEntry[]) => {

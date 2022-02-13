@@ -26,12 +26,8 @@ export function CodeEditor({programId}:CodeEditorProps) {
     const [code, setCode] = useProgramCodeState(programId)
     const editor = useRef<HTMLDivElement>(null);
 
-    console.log("CodeEditor", programId, isSelected);
-
     useEffect(
         () => {
-
-            console.log("useEffect EditorView");
 
             let timer:NodeJS.Timeout;       
             const onCodeChanged = (v:ViewUpdate) => {
