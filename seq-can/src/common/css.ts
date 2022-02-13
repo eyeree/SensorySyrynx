@@ -9,3 +9,7 @@ export const flexRow =  css({
     display: 'flex',
     flexDirection: 'row'
 })
+
+export const displayNone = css({
+    display: 'none'
+})

@@ -1,12 +1,10 @@
-import { useRef, useEffect } from 'react';
 import { atom, atomFamily, selector, useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { persistAtom } from './persistance';
 import { newId } from './id';
 import { logAtom } from './log';
-import { SetupStepIndex } from './setup';
 
-const DEFAULT_EFFECTS = [logAtom]
-const PERSIST_EFFECTS = [...DEFAULT_EFFECTS, persistAtom]
+const LOG_EFFECTS = [logAtom]
+const PERSIST_EFFECTS = [...LOG_EFFECTS, persistAtom]
 
 export type ProgramId = string;
 export type ProgramCode = string;
@@ -16,23 +14,34 @@ export type ProgramIdList = Array<ProgramId>;
 export type ProgramActionName = string;
 export type ProgramActionNameList = Array<ProgramActionName>;
 
-export type ProgramErrorStackEntry = {function:string, line:number, column:number};
-export type ProgramErrorStack = Array<ProgramErrorStackEntry>;
-export type ProgramError = {message:string, stack: ProgramErrorStack};
+export type ProgramError = {message:string,  line:number, column:number};
+export type ProgramErrorNullable = ProgramError|null;
 
 const newProgramCode = `const circle = new _.Shape();
 circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 0.1);
-circle.x = _.bounds.left;
+circle.x = 0;
 circle.y = 0;
 _.container.addChild(circle);
 
+function moveCircle(to) {
+  _.Tween.get(circle, {onChange: () => _.bounds.wrap(circle)})
+      .to(to, _.sequencer.stepMS, _.Ease.getPowInOut(4))
+}
+
 return {
-    step: ({time}) => {
-        if(circle.x >= _.bounds.right) {
-            circle.x = _.bounds.left;
+    actions: {
+        left: () => {
+            moveCircle({x: circle.x-0.1})
+        },
+        right: () => {
+            moveCircle({x: circle.x+0.1})
+        },
+        up: () => {
+            moveCircle({y: circle.y-0.1})
+        },
+        down: () => {
+            moveCircle({y: circle.y+0.1})
         }
-        _.Tween.get(circle, {override:true})
-            .to({x: circle.x+0.1}, time, _.Ease.getPowInOut(4))
     }
 }
 `
@@ -71,7 +80,7 @@ export function useCreateProgram() {
     let n = 1
     let newName:string
     do {
-      newName = `new program ${n++}`
+      newName = `program ${n++}`
     } while(programs.some(({programName: name}) => newName === name))
 
     const programId = newId();    
@@ -94,24 +103,13 @@ export const useProgramCode = (programId:ProgramId) => useRecoilValue(programCod
 export const useSetProgramCode = (programId:ProgramId) => useSetRecoilState(programCode(programId))
 export const useProgramCodeState = (programId:ProgramId) => useRecoilState(programCode(programId))
 
-
-export type ProgramActionFunctionKey = { programId:ProgramId, actionName:ProgramActionName }
-export type ProgramActionFunction = (stepIndex:SetupStepIndex) => void
-
-const programActionFunction = atomFamily<ProgramActionFunction|null, ProgramActionFunctionKey>({
-    key: "programActionFunction",
-    default: null,
-    effects: DEFAULT_EFFECTS
-})
-
-export const useProgramActionFunction = (key:ProgramActionFunctionKey) => useRecoilValue(programActionFunction(key))
-export const useSetProgramActionFunction = (key:ProgramActionFunctionKey) => useSetRecoilState(programActionFunction(key))
-
 const programName = atomFamily<ProgramName, ProgramId>({
     key: "programName",
     default: programId => "New Program",
     effects: PERSIST_EFFECTS
 });
+
+export const useProgramName = (programId:ProgramId) => useRecoilValue(programName(programId));
 
 const programActionList = atomFamily<ProgramActionNameList, ProgramId>({
     key: "programActionList",
@@ -120,31 +118,43 @@ const programActionList = atomFamily<ProgramActionNameList, ProgramId>({
 
 export const useProgramActions = (programId:ProgramId) => useRecoilValue(programActionList(programId))
 
-const programError = atomFamily<ProgramError|null, ProgramId>({
-    key: "programError",
-    default: programId => null
+const selectedProgramError = atom<ProgramErrorNullable>({
+    key: "selectedProgramError",
+    default: null,
+    effects: LOG_EFFECTS
 });
 
-export const selectedProgramId = atom<ProgramId>({
+export const useSelectedProgramError = () => useRecoilValue(selectedProgramError)
+export const useSetSelectedProgramError = () => useSetRecoilState(selectedProgramError)
+export const useSelectedProgramErrorState = () => useRecoilState(selectedProgramError)
+
+const selectedProgramId = atom<ProgramId>({
     key: "selectedProgramId",
-    default: "TODO",
+    default: "INVALID",
     effects: PERSIST_EFFECTS
 });
+
+export const useSetSelectedProgramId = () => useSetRecoilState(selectedProgramId)
+export const useSelectedProgramId = () => useRecoilValue(selectedProgramId)
 
 const selectedProgramCode = selector<ProgramCode>({
     key: "selectedProgramCode",
     get: ({get}) => {
-        const id = get(selectedProgramId);
-        const code = get(programCode(id));
+        const programId = get(selectedProgramId);
+        const code = get(programCode(programId));
         return code;
     },
     set: ({get, set}, code) => {
-        const id = get(selectedProgramId);
-        set(programCode(id), code);
+        const programId = get(selectedProgramId);
+        set(programCode(programId), code);
     }
 });
 
-const selectedProgramError = selector<ProgramError|null>({
+export const useSelectedProgramCodeState = () => useRecoilState(selectedProgramCode);
+
+/*
+
+const selectedProgramError = selector<ProgramErrorNullable>({
     key: "selectedProgramError",
     get: ({get}) => {
         const id = get(selectedProgramId);
@@ -170,7 +180,7 @@ const selectedProgramName = selector<ProgramName>({
     }
 });
 
-
+*/
 /*
 
 createProgram

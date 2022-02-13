@@ -12,6 +12,7 @@ import { flexColumn, flexRow } from "../common/css";
 import { useInterval } from '../common/interval';
 
 import { useCurrentSetupSpeedState, useCurrentSetupStepCountState, useSetIsSetupStepActive } from '../state/setup';
+import { Runtime } from '../runtime/runtime';
 
 const container = css(
     flexColumn,
@@ -70,6 +71,8 @@ export function Controls() {
 
     const [paused, setPaused] = useState(false);
     const togglePaused = () => setPaused(!paused)
+
+    Runtime.setSequencerState(speed, steps, paused);
     
     return (
         <div css={container}>

@@ -2,7 +2,7 @@
 import { css } from '@emotion/react'
 
 import { Controls } from './Controls';
-import { Sequence } from './Sequence';
+import { Setup } from './Setup';
 
 import { flexRow } from "../common/css";
 
@@ -16,6 +16,6 @@ const container = css(
 export function Sequencer() {
     return <div css={container}>
         <Controls/>
-        <Sequence/>
+        <Setup/>
     </div>
 }

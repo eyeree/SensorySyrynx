@@ -28,7 +28,7 @@ function MasterStep({index}:MasterStepProps) {
     return <div css={active ? masterStepActiveCSS : masterStepInactiveCSS}/>
 }
 
-const stepsCSS = css(
+const masterStepsCSS = css(
     flexRow,
     {
 
@@ -37,7 +37,7 @@ const stepsCSS = css(
 
 export function MasterSteps() {
     const steps = useCurrentSetupStepCount();
-    return <div css={stepsCSS}>
+    return <div css={masterStepsCSS}>
         {arrayOf(steps, index => 
             <MasterStep key={index} index={index}/>
         )}

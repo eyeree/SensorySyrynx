@@ -2,7 +2,7 @@ import { atom, atomFamily, DefaultValue, selector, selectorFamily, useRecoilCall
 import { persistAtom } from './persistance';
 import { logAtom } from './log';
 
-import { ProgramActionName, ProgramId, ProgramIdList, selectedProgramId, useCreateProgram } from './program'
+import { ProgramActionName, ProgramId, ProgramIdList, useCreateProgram } from './program'
 import { newId } from './id';
 
 const DEFAULT_EFFECTS = [logAtom]
@@ -35,7 +35,7 @@ export const useSetupProgramIdList = (setupId:SetupId) => useRecoilValue(setupPr
 
 const setupName = atomFamily<SetupName, SetupId>({
     key: "setupName",
-    default: setupId => "New Setup",
+    default: setupId => "",
     effects: PERSIST_EFFECTS
 });
 
@@ -65,7 +65,7 @@ export function useCreateSetup() {
     let n = 1
     let newName:string
     do {
-      newName = `new setup ${n++}`
+      newName = `setup ${n++}`
     } while(setups.some(({setupName}) => newName === setupName))
 
     const setupId = newId();    
@@ -98,7 +98,7 @@ export const useSetupStepCount = (setupId:SetupId) => useRecoilValue(setupStepCo
 export type SetupStepStatusKey = { setupId: SetupId, programId: ProgramId, actionName:ProgramActionName, stepIndex: SetupStepIndex };
 const setupStepStatus = atomFamily<SetupStepStatus, SetupStepStatusKey>({
     key: "setupStepStatus",
-    default: key => key.stepIndex === 1 || key.stepIndex === 3,
+    default: false,
     effects: PERSIST_EFFECTS
 });
 
@@ -115,6 +115,13 @@ export const useSetIsSetupStepActive = () => useRecoilCallback(({set}) => (stepI
     set(isSetupStepActive(stepIndex), isActive);
 })
 
+const selectedProgramIndex = atom<SetupProgramIndex>({
+    key: "selectedProgramIndex",
+    default: 0
+})
+
+export const useSelectedProgramIndexState = () => useRecoilState(selectedProgramIndex)
+
 const currentSetupId = atom<SetupId>({
     key: "currentSetupId",
     default: "",
@@ -122,7 +129,10 @@ const currentSetupId = atom<SetupId>({
 });
 
 export const useCurrentSetupId = () => useRecoilValue(currentSetupId);
-export const useSetCurrentSetupId = () => useSetRecoilState(currentSetupId);
+export const useSetCurrentSetupId = () => useRecoilCallback(({set}) => (setupId:SetupId) => {
+    set(currentSetupId, setupId);
+    set(selectedProgramIndex, 0);
+});
 
 const currentSetupSpeed = selector<SetupSpeed>({
     key: "currentSetupSpeed",
@@ -165,65 +175,3 @@ const currentSetupStepCount = selector<SetupStepCount>({
 export const useCurrentSetupStepCount = () => useRecoilValue(currentSetupStepCount)
 export const useSetCurrentSetupStepCount = () => useSetRecoilState(currentSetupStepCount)
 export const useCurrentSetupStepCountState = () => useRecoilState(currentSetupStepCount)
-
-const currentSetupProgramIds = selector<ProgramIdList>({
-    key: "currentSetupProgramIds",
-    get: ({get}) => {
-        const id = get(currentSetupId);
-        const programs = get(setupProgramIdList(id))
-        return programs;
-    }
-});
-
-const currentSetupProgramIdByIndex = selectorFamily<ProgramId, SetupProgramIndex>({
-    key: "currentSetupProgramIdByIndex",
-    get: programIndex => ({get}) => {
-        const ids = get(currentSetupProgramIds);
-        if(programIndex < 0 || programIndex >= ids.length) {
-            throw Error(`Invalid program index ${programIndex} for setup id ${get(currentSetupId)}.`)
-        }
-        return ids[programIndex]
-    }
-});
-
-const selectedProgramIndex = selector<SetupProgramIndex|null>({
-    key: "selectedProgramIndex",
-    get: ({get}) => {
-        const id = get(selectedProgramId);
-        const ids = get(currentSetupProgramIds);
-        const index = ids.indexOf(id);
-        return index == -1 ? null : index;
-    },
-    set: ({get, set}, index) => {
-        if(index instanceof DefaultValue) return; // default is what it is
-        if(index === null) throw Error("A program index must be specified.")
-        const id = get(currentSetupProgramIdByIndex(index))
-        set(selectedProgramId, id);
-    }
-})
-
-
-
-/*
-
-createProgram
-deleteProgram
-setProgramName
-setProgramCode
-setProgramError
-clearProgramError
-
-createSetup
-deleteSetup
-setSetupName
-addSetupProgram
-removeSetupProgram
-setSetupProgramOrder
-
-setSelectedSetupProgram
-
-toggleSetupStepStatus
-setSetupStepStatus
-
-*/
-

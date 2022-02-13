@@ -2,7 +2,6 @@
 
 import { css } from '@emotion/react'
 import { useEffect, useRef } from 'react';
-import { atom, selector, useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 
 import { basicSetup } from "@codemirror/basic-setup";
 import { EditorState } from "@codemirror/state";
@@ -12,158 +11,64 @@ import { indentWithTab } from "@codemirror/commands"
 import { oneDark } from '@codemirror/theme-one-dark'
 
 import './CodeEditor.css'
-import { useErrorState } from '.';
-import { Program, ProgramFunction } from '../program/Program';
-import { usePrevious } from '../common/previous';
-import { errorState, getErrorState } from './Status';
-
-const defaultCode = `const circle = new _.Shape();
-circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 0.1);
-circle.x = _.bounds.left;
-circle.y = 0;
-_.container.addChild(circle);
-
-return {
-    step: ({time}) => {
-        if(circle.x >= _.bounds.right) {
-            circle.x = _.bounds.left;
-        }
-        _.Tween.get(circle, {override:true})
-            .to({x: circle.x+0.1}, time, _.Ease.getPowInOut(4))
-    }
-}
-`
+import { ProgramId, useProgramCodeState, useSelectedProgramId } from '../state/program';
+import { displayNone } from '../common/css';
 
 const editCSS = css({
     height: "100%"
 })
 
-export const codeState = atom({
-    key: "Editor_CodeState",
-    default: defaultCode,
-    effects: [
-        ({onSet}) => {
-            // const [, setErrorState] = useErrorState();
-            onSet(code => {
-                console.log('code set')
-                // try {
-                //     const source = getFactorySource(code);
-                //     const factory = new Function(source); // eslint-disable-line no-new-func
-                //     const fn = factory();
-                //     Program.getProgram().setFunction(fn);
-                //     setErrorState(null);
-                // } catch (e: any) {
-                //     setErrorState(e);
-                // }
-            });
-        }
-    ]
-})
+type CodeEditorProps = { programId:ProgramId }
+export function CodeEditor({programId}:CodeEditorProps) {
 
-export const compiledCodeState = selector<ProgramFunction|Error>({
-    key: "Editor_CompiledCode",
-    get: ({get}) => {
-        console.log("Editor_CompiledCode")
-        const code = get(codeState);
-        try {
-            return getFactoryFunction(code);
-        } catch (e: any) {
-            return e;
-        }
-    }
-})
-
-// function getWrapperSource(code:string) {
-//     return     
-// }
-
-function getFactoryFunction(code: string) {
-    const source = `return function PROGRAM_ROOT (_) {\n${code}\n}`;
-    const wrapper = new Function(source); // eslint-disable-line no-new-func
-    return wrapper();
-}
-
-// export function useCompiledCode():ProgramFunction|null {
-
-//     const code = useRecoilValue(codeState);
-//     const previousCode = usePrevious(code);
-//     const [ , setErrorState] = useErrorState();
-
-//     let result:ProgramFunction|null = null;
-
-//     if(code !== previousCode) {
-//         try {
-//             const source = getWrapperSource(code);
-//             const factory = new Function(source); // eslint-disable-line no-new-func
-//             result = factory();
-//             setErrorState(null);
-//         } catch (e: any) {
-//             setErrorState(e);
-//         }
-//     }
-
-//     return result;
-
-// }
-
-export function CodeEditor() {
-
-    const code = useRecoilValue(codeState);
-
-    console.log("CodeEditor");
-
+    const selectedProgramId = useSelectedProgramId();
+    const isSelected = selectedProgramId == programId;
+    const [code, setCode] = useProgramCodeState(programId)
     const editor = useRef<HTMLDivElement>(null);
 
-    const onCodeChanged = useRecoilCallback(
-        ({set}) => {
-            let timer:NodeJS.Timeout;
-            return (v:ViewUpdate) => {
-                if(v.docChanged) {
-                    if(timer) clearTimeout(timer);
-                    timer = setTimeout(() => {
-                        const code = v.state.doc.toString();
-                        set(codeState, code)
-                        // try {
-                        //     const fn = getFactoryFunction(code);
-                        //     Program.getProgram().setFactoryFunction(fn);
-                        //     set(errorState, null);
-                        // } catch (e: any) {
-                        //     Program.getProgram().setFactoryFunction(null);
-                        //     set(errorState, getErrorState(e))
-                        // }
-                    }, 500);
-                  }
-                }
-            }, 
-        []
-    );        
+    console.log("CodeEditor", programId, isSelected);
 
-    useEffect(() => {
+    useEffect(
+        () => {
 
-        console.log("useEffect EditorView");
+            console.log("useEffect EditorView");
+
+            let timer:NodeJS.Timeout;       
+            const onCodeChanged = (v:ViewUpdate) => {
+                if(!v.docChanged) return;        
+                if(timer) clearTimeout(timer);
+                timer = setTimeout(() => {
+                    const code = v.state.doc.toString();
+                    setCode(code);
+                }, 500);
+            }
         
-        const state = EditorState.create({
-            doc: code,
-            extensions: [
-                basicSetup, 
-                javascript(),
-                oneDark,
-                keymap.of([indentWithTab]),
-                EditorView.updateListener.of(onCodeChanged)
-            ],
-        });
+            const state = EditorState.create({
+                doc: code,
+                extensions: [
+                    basicSetup, 
+                    javascript(),
+                    oneDark,
+                    keymap.of([indentWithTab]),
+                    EditorView.updateListener.of(onCodeChanged)
+                ],
+            });
 
-        const view = new EditorView({ state, parent: editor.current!});
+            const view = new EditorView({ state, parent: editor.current!});
 
-        view.focus();
+            return () => {
+                if(timer) clearTimeout(timer);
+                view.destroy();
+            }
 
-        return () => {
-            // if(timer) clearTimeout(timer);
-            view.destroy();
-        }
+        }, 
+        [] // eslint-disable-line react-hooks/exhaustive-deps
+        // for now we assume code can only be changed via this editor instance
+        // so we just need to initialize the editor and report any changes
+    );
 
-    }, []);
+    const style = isSelected ? editCSS : displayNone;
 
-    return <div css={editCSS} ref={editor}/>
+    return <div css={style} ref={editor}/>
 
 }

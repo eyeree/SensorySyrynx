@@ -3,6 +3,7 @@ import { css } from '@emotion/react'
 
 import React from 'react'
 import createjs from 'eyeree-createjs-module';
+import DisplayObject = createjs.DisplayObject;
 
 export type CanvasProps = {}
 
@@ -28,10 +29,19 @@ export type Bounds = {
   top:number,
   left:number,
   bottom:number,
-  right:number
+  right:number,
+  wrap(o:DisplayObject):void;
 }
 
-export const bounds:Bounds = {top:0, left:0, bottom:0, right:0}
+export const bounds:Bounds = {
+  top:0, left:0, bottom:0, right:0,
+  wrap(o:DisplayObject) {
+    if(o.x > bounds.right) o.x = bounds.left;
+    if(o.x < bounds.left) o.x = bounds.right;
+    if(o.y > bounds.bottom) o.y = bounds.top;
+    if(o.y < bounds.top) o.y = bounds.bottom;
+  }
+}
 
 export function Canvas(props:CanvasProps) {
 
