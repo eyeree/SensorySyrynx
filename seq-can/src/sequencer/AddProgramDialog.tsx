@@ -12,7 +12,7 @@ export type AddProgramProps = { setupId: SetupId, open: boolean, onClose: () => 
 
 export function AddProgramDialog({ setupId, open, onClose }: AddProgramProps) {
 
-    console.log("AddProgramDialog", open);
+    // console.log("AddProgramDialog", open);
 
     const programs = useProgramList()
     const createProgram = useCreateProgram();

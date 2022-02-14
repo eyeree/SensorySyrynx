@@ -4,7 +4,7 @@
 }
 
 .cm-scroller {
-    overflow: scroll;
-    overflow-x: scroll !important;
-    overflow-y: scroll;
+    overflow: auto;
+    overflow-x: auto !important;
+    overflow-y: auto;
 }

@@ -25,8 +25,6 @@ const editorCSS = css({
 const footerCSS = css(
     flexRow,
     {
-        height: 50,
-        backgroundColor: "yellow",
         flexShrink: 0
     }
 )

@@ -213,7 +213,7 @@ function AddProgram({ setupId }: AddProgramProps) {
 
     const [open, setOpen] = useState(false);
 
-    console.log("AddProgram", open);
+    // console.log("AddProgram", open);
 
     const onClick = () => { setOpen(true) }
     const onClose = () => { 
