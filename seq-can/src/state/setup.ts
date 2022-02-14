@@ -116,6 +116,16 @@ const setupStepStatus = atomFamily<StepStatus, StepStatusKey>({
 });
 
 export const useSetupProgramIdList = (setupId:SetupId) => useRecoilValue(setupProgramIdList(setupId));
+export const useAppendSetupProgramIdListEntry = (setupId:SetupId) => useRecoilCallback(({set}) => (programId:ProgramId) => {
+    console.log("useAppendSetupProgramIdListEntry")
+    let index = -1;
+    set(setupProgramIdList(setupId), oldList => {
+        console.log("set callback")
+        index = oldList.length;
+        return [...oldList, programId]
+    })
+    return index;
+})
 
 export const useSetupList = () => useRecoilValue(setupList)
 

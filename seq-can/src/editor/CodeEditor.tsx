@@ -15,7 +15,10 @@ import { ProgramId, useProgramCodeState, useSelectedProgramId } from '../state/p
 import { displayNone } from '../common/css';
 
 const editCSS = css({
-    height: "100%"
+    backgroundColor: "pink",
+    // height: "100%",
+    width: "100%",
+    display: "flex"
 })
 
 type CodeEditorProps = { programId:ProgramId }
@@ -48,6 +51,7 @@ export function CodeEditor({programId}:CodeEditorProps) {
                     keymap.of([indentWithTab]),
                     EditorView.updateListener.of(onCodeChanged)
                 ],
+
             });
 
             const view = new EditorView({ state, parent: editor.current!});
@@ -65,6 +69,6 @@ export function CodeEditor({programId}:CodeEditorProps) {
 
     const style = isSelected ? editCSS : displayNone;
 
-    return <div css={style} ref={editor}/>
+    return <div css={style} ref={editor}></div>
 
 }

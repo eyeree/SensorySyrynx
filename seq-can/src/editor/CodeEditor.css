@@ -1,4 +1,10 @@
 
 .cm-editor  {
-    height: 100%;
+    width: 100%;
+}
+
+.cm-scroller {
+    overflow: scroll;
+    overflow-x: scroll !important;
+    overflow-y: scroll;
 }

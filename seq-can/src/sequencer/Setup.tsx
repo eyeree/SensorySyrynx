@@ -8,6 +8,8 @@ import { usePrevious } from '../common/previous';
 import { ActionList, ActionListEntry, Runtime } from '../runtime';
 import { ProgramId, useProgramName, useProgramCode, useSetSelectedProgramId, useSetSelectedProgramError, ProgramErrorNullable } from '../state/program';
 import { StepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, ProgramIndex, useSelectedProgramIndexState } from '../state/setup';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import { AddProgramDialog } from './AddProgramDialog';
 
 const stepCSS = css({
     width: 10,
@@ -53,15 +55,15 @@ const programStepEnabledActiveCSS = css(
     }
 )
 
-function getProgramStepCSS(active:boolean, enabled:boolean) {
-    if(enabled) {
-        if(active) {
+function getProgramStepCSS(active: boolean, enabled: boolean) {
+    if (enabled) {
+        if (active) {
             return programStepEnabledActiveCSS
         } else {
             return programStepEnabledInactiveCSS
         }
     } else {
-        if(active) {
+        if (active) {
             return programStepDisabledActiveCSS
         } else {
             return programStepDisabledInactiveCSS
@@ -69,10 +71,10 @@ function getProgramStepCSS(active:boolean, enabled:boolean) {
     }
 }
 
-type ActionStepProps = {setupId: SetupId, programId:ProgramId, action:ActionListEntry, stepIndex:StepIndex}
-function ActionStep({setupId, programId, action, stepIndex}:ActionStepProps) {
+type ActionStepProps = { setupId: SetupId, programId: ProgramId, action: ActionListEntry, stepIndex: StepIndex }
+function ActionStep({ setupId, programId, action, stepIndex }: ActionStepProps) {
 
-    const [enabled, setEnabled] = useSetupStepStatusState({setupId, programId, actionName:action.name, stepIndex});
+    const [enabled, setEnabled] = useSetupStepStatusState({ setupId, programId, actionName: action.name, stepIndex });
     const active = useIsSetupStepActive(stepIndex);
     const wasActive = usePrevious(active);
 
@@ -81,12 +83,12 @@ function ActionStep({setupId, programId, action, stepIndex}:ActionStepProps) {
     const onClick = () => setEnabled(!enabled);
 
     useEffect(() => {
-        if(enabled && active && !wasActive && action.fn) {
-            action.fn({stepIndex});
+        if (enabled && active && !wasActive && action.fn) {
+            action.fn({ stepIndex });
         }
     })
 
-    return <div css={css} onClick={onClick}/>
+    return <div css={css} onClick={onClick} />
 
 }
 
@@ -94,48 +96,48 @@ const statusDotSize = theme.spacing(1.5)
 const statusDotMargin = theme.spacing(1)
 const actionIndent = theme.spacing(4)
 
-type ActionProps = {setupId:SetupId, programId:ProgramId, action:ActionListEntry}
-function Action({setupId, programId, action}:ActionProps) {
+type ActionProps = { setupId: SetupId, programId: ProgramId, action: ActionListEntry }
+function Action({ setupId, programId, action }: ActionProps) {
     const stepCount = useSetupStepCount(setupId);
     return <>
-        <div css={css({marginLeft: actionIndent, marginRight: statusDotMargin})}>{action.name}</div>
+        <div css={css({ marginLeft: actionIndent, marginRight: statusDotMargin })}>{action.name}</div>
         <div css={flexRow}>
-            {arrayOf(stepCount, stepIndex => 
-                <ActionStep key={stepIndex} setupId={setupId} programId={programId} action={action} stepIndex={stepIndex}/>
+            {arrayOf(stepCount, stepIndex =>
+                <ActionStep key={stepIndex} setupId={setupId} programId={programId} action={action} stepIndex={stepIndex} />
             )}
         </div>
     </>
 }
 
-type ProgramNameProps = {programId:ProgramId}
-function ProgramName({programId}:ProgramNameProps) {
+type ProgramNameProps = { programId: ProgramId }
+function ProgramName({ programId }: ProgramNameProps) {
     const programName = useProgramName(programId);
     return <div>{programName}</div>
 }
 
-type ProgramStatusProps = {programId:ProgramId, programIndex:ProgramIndex, programError:ProgramErrorNullable}
-function ProgramStatus({programId, programIndex, programError}:ProgramStatusProps) {
+type ProgramStatusProps = { programId: ProgramId, programIndex: ProgramIndex, programError: ProgramErrorNullable }
+function ProgramStatus({ programId, programIndex, programError }: ProgramStatusProps) {
     const [selectedProgramIndex, setSelectedProgramIndex] = useSelectedProgramIndexState();
     const setSelectedProgramId = useSetSelectedProgramId();
     const setSelectedProgramError = useSetSelectedProgramError();
     const isSelected = selectedProgramIndex === programIndex;
 
     useEffect(() => {
-        if(isSelected) {
+        if (isSelected) {
             setSelectedProgramError(programError);
             setSelectedProgramId(programId);
-        }    
+        }
     }, [isSelected, programError, programId, setSelectedProgramError, setSelectedProgramId])
 
     let color;
-    if(programError) {
-        if(isSelected) {
+    if (programError) {
+        if (isSelected) {
             color = 'red'
         } else {
             color = 'darkred'
         }
     } else {
-        if(isSelected) {
+        if (isSelected) {
             color = 'green'
         } else {
             color = 'darkgreen'
@@ -156,18 +158,18 @@ function ProgramStatus({programId, programIndex, programError}:ProgramStatusProp
 
 }
 
-type ProgramInfoProps = {programId:ProgramId, programIndex:ProgramIndex, programError:ProgramErrorNullable}
-function ProgramInfo({programId, programError, programIndex}:ProgramInfoProps) {
+type ProgramInfoProps = { programId: ProgramId, programIndex: ProgramIndex, programError: ProgramErrorNullable }
+function ProgramInfo({ programId, programError, programIndex }: ProgramInfoProps) {
     return <div css={css(flexRow, {
         gridColumn: "1 / 3",
     })}>
-        <ProgramStatus programId={programId} programIndex={programIndex} programError={programError}/>
-        <ProgramName programId={programId}/>
+        <ProgramStatus programId={programId} programIndex={programIndex} programError={programError} />
+        <ProgramName programId={programId} />
     </div>
 }
 
-type ProgramProps = {setupId:SetupId, programId:ProgramId, programIndex:ProgramIndex}
-function Program({setupId, programId, programIndex}:ProgramProps) {
+type ProgramProps = { setupId: SetupId, programId: ProgramId, programIndex: ProgramIndex }
+function Program({ setupId, programId, programIndex }: ProgramProps) {
 
     const code = useProgramCode(programId);
     const [programError, setProgramError] = useState<ProgramErrorNullable>(null);
@@ -184,26 +186,55 @@ function Program({setupId, programId, programIndex}:ProgramProps) {
         [] // eslint-disable-line react-hooks/exhaustive-deps
         // code changes are handled by the useEffect below, setProgramError is
         // not expected to change (is that a valid assumption?)
-    ) 
+    )
 
     useEffect(
-        () => { 
-            if(runtime) {
+        () => {
+            if (runtime) {
                 runtime.setCode(code)
                 setActions(runtime.actions);
             }
-        }, 
+        },
         [code] // eslint-disable-line react-hooks/exhaustive-deps
         // we know that runtime will never change, only need to track code changes
     )
 
     return <>
-        <ProgramInfo programId={programId} programError={programError} programIndex={programIndex}/>
-        {actions.map(action => 
-            <Action key={action.name} setupId={setupId} programId={programId} action={action}/>
+        <ProgramInfo programId={programId} programError={programError} programIndex={programIndex} />
+        {actions.map(action =>
+            <Action key={action.name} setupId={setupId} programId={programId} action={action} />
         )}
     </>
-    
+
+}
+
+type AddProgramProps = { setupId: SetupId }
+function AddProgram({ setupId }: AddProgramProps) {
+
+    const [open, setOpen] = useState(false);
+
+    console.log("AddProgram", open);
+
+    const onClick = () => { setOpen(true) }
+    const onClose = () => { 
+        console.log("---> setOpen(false)")
+        setOpen(false) 
+    }
+
+    return <>
+        <div css={css(flexRow, { gridColumn: "1 / 3", color: 'gray', cursor: 'pointer' })} onClick={onClick}>
+            <div css={css({
+                height: statusDotSize,
+                width: statusDotSize,
+                display: "inline-block",
+                marginRight: statusDotMargin
+            })}>
+                <AddCircleOutlineIcon sx={{ width: statusDotSize, height: statusDotSize }} />
+            </div>
+            <div>(add program)</div>
+        </div>
+        <AddProgramDialog setupId={setupId} open={open} onClose={onClose}/>
+    </>
 }
 
 const setupCSS = css(
@@ -211,7 +242,6 @@ const setupCSS = css(
         gridAutoColumns: "min-content",
         gridAutoRows: "min-content",
         display: "grid",
-        overflow: "auto",
         width: "100%"
     }
 )
@@ -219,10 +249,11 @@ const setupCSS = css(
 export function Setup() {
     const setupId = useCurrentSetupId();
     const programIds = useSetupProgramIdList(setupId);
-    return <Paper css={setupCSS} elevation={6} sx={{padding:1}}>
-        {programIds.map((programId, programIndex) => 
-            <Program key={programIndex} setupId={setupId} programId={programId} programIndex={programIndex}/>
+    return <Paper css={setupCSS} elevation={12} sx={{ padding: 1, margin: 1, overflow: "auto" }}>
+        {programIds.map((programId, programIndex) =>
+            <Program key={programIndex} setupId={setupId} programId={programId} programIndex={programIndex} />
         )}
+        <AddProgram setupId={setupId} />
     </Paper>
 }
 

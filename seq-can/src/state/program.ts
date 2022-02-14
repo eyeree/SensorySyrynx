@@ -60,10 +60,6 @@ const programList = selector<ProgramList>({
     }
 })
 
-function useProgramList() {
-    return useRecoilValue(programList)
-}
-
 const programCode = atomFamily<ProgramCode, ProgramId>({
     key: "programCode",
     default: programId => newProgramCode,
@@ -88,6 +84,8 @@ const selectedProgramId = atom<ProgramId>({
     default: "INVALID",
     effects: [persistAtom]
 });
+
+export const useProgramList = () => useRecoilValue(programList)
 
 export const useProgramCode = (programId: ProgramId) => useRecoilValue(programCode(programId))
 export const useProgramCodeState = (programId: ProgramId) => useRecoilState(programCode(programId))

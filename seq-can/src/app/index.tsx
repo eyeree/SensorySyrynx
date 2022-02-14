@@ -4,11 +4,14 @@ import { css } from '@emotion/react'
 import {Canvas} from '../canvas';
 import {Editor} from '../editor';
 import {Sequencer} from '../sequencer';
-import {StateRoot} from '../state';
+import {StateRoot} from '../state/StateRoot';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import {flexRow, flexColumn, theme} from '../common/css';
 import { createTheme, Paper, ThemeOptions, ThemeProvider } from '@mui/material';
+import SplitPane from 'react-split-pane';
+
+import './split-pane.css'
 
 const appCSS = css(  
   flexRow,
@@ -20,25 +23,34 @@ const appCSS = css(
 const mainCSS = css(
   flexColumn,
   {
+    flexGrow: 1
   }
 )
 
 const editorCSS = css({
-  // padding: 4,
-  // paddingLeft: 0,
-  flexGrow:1,
   minWidth: 500,
+  display: "flex"
+  // height: "100%"
 })
 
 const canvasCSS = css({
-  // border: "gray ridge 12px",
-  // margin: 4,
-  backgroundColor: "red",
+  flexGrow:1,
+  // display: "flex"
+  // backgroundColor: "red",
 })
 
 const sequencerCSS = css({
-  flexGrow:1,
-  minHeight: 100,
+  minHeight: 200,
+})
+
+const scrollContainer = css({
+  position: 'absolute', 
+  top: 0,  
+  left:0,
+  bottom:0, 
+  right:0, 
+  display: "flex",
+  overflow: "hidden"
 })
 
 export function App() {
@@ -47,15 +59,29 @@ export function App() {
     <StateRoot>
       <ThemeProvider theme={theme}>
         <CssBaseline enableColorScheme={true}/>
-        <Paper css={appCSS} sx={{}}>
-          <div css={mainCSS}>
-            <Paper elevation={6} sx={{margin:1, padding:1}}><Canvas/></Paper>
-            <div css={sequencerCSS}><Sequencer/></div>
+        <SplitPane split="vertical" minSize={500} defaultSize={1280} css={{position: 'relative'}}>
+          <SplitPane split="horizontal" minSize={500} defaultSize={1024} css={{height: 1}}>
+            <Canvas/>
+            <div css={scrollContainer}>
+              <Sequencer/>
+            </div>
+          </SplitPane>
+          <div css={scrollContainer}>
+            <Editor/>
           </div>
-          <div css={editorCSS}><Editor/></div>
-        </Paper>
+        </SplitPane>
       </ThemeProvider>
     </StateRoot>
   )
 
 }
+
+/*
+<div css={appCSS}>
+<div css={mainCSS}>
+  <div css={canvasCSS}><Canvas/></div>
+  <div css={sequencerCSS}><Sequencer/></div>
+</div>
+<div css={editorCSS}><Editor/></div>
+</div>
+*/
