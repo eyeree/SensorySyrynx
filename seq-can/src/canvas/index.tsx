@@ -60,7 +60,7 @@ export function Canvas(props: CanvasProps) {
 
         const { width, height } = canvas.getBoundingClientRect();
 
-        console.log("resize", width, height, canvas.width, canvas.height)
+        // console.log("resize", width, height, canvas.width, canvas.height)
 
         if (canvas.width !== width || canvas.height !== height) {
             const { devicePixelRatio: ratio = 1 } = window
@@ -97,7 +97,7 @@ export function Canvas(props: CanvasProps) {
         }
     }, []);
 
-    return <Paper elevation={6} sx={{ padding: 1, margin: 1, width: 1 }}>
+    return <Paper elevation={6} sx={{ padding: 1, width: 1 }}>
         <div css={wrapperCSS}>
             <canvas css={canvasCSS} ref={canvasRef} />
         </div>

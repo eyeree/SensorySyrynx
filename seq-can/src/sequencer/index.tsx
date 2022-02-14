@@ -15,7 +15,7 @@ const container = css(
 )
 
 export function Sequencer() {
-    return <Paper css={container} elevation={6} sx={{margin: 1, marginTop: 0, width: 1, overflow: "hidden"}}>
+    return <Paper css={container} elevation={6} sx={{padding: 1, width: 1, overflow: "hidden"}}>
         <Controls/>
         <Setup/>
     </Paper>

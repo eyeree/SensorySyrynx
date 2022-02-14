@@ -42,7 +42,7 @@ export function Editor() {
     const programIdSet = new Set(programIdList)
 
     return (
-        <Paper elevation={6} sx={{padding:1, margin: 1, marginLeft: 0, display: "flex", width: 1, overflow: "hidden"}}>
+        <Paper elevation={6} sx={{padding:1, display: "flex", width: 1, overflow: "hidden"}}>
             <div css={{display: "flex", flexDirection: "column", width: "100%", overflow: "hidden"}}>
                 <div css={{flexGrow: 1, display: "flex", overflow: "hidden"}}>
                     {Array.from(programIdSet, programId => <CodeEditor key={programId} programId={programId}/>)}

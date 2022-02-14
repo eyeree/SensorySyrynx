@@ -12,6 +12,8 @@ import { createTheme, Paper, ThemeOptions, ThemeProvider } from '@mui/material';
 import SplitPane from 'react-split-pane';
 
 import './split-pane.css'
+import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
+import 'react-reflex/styles.css'
 
 const appCSS = css(  
   flexRow,
@@ -59,23 +61,48 @@ export function App() {
     <StateRoot>
       <ThemeProvider theme={theme}>
         <CssBaseline enableColorScheme={true}/>
-        <SplitPane split="vertical" minSize={500} defaultSize={1280} css={{position: 'relative'}}>
-          <SplitPane split="horizontal" minSize={500} defaultSize={1024} css={{height: 1}}>
-            <Canvas/>
+        <ReflexContainer orientation="vertical" style={{padding: theme.spacing(1)}}>
+          <ReflexElement minSize={300}>
+            <ReflexContainer orientation="horizontal">
+              <ReflexElement minSize={300}>
+                <div css={scrollContainer}>
+                  <Canvas/>
+                </div>
+              </ReflexElement>
+              <ReflexSplitter style={{height: theme.spacing(1), border: "none", background: "none"}}/>
+              <ReflexElement minSize={50}>
+                <div css={scrollContainer}>
+                  <Sequencer/>
+                </div>
+              </ReflexElement>
+            </ReflexContainer>
+          </ReflexElement>
+          <ReflexSplitter style={{width: theme.spacing(1), border: "none", background: "none"}}/>
+          <ReflexElement minSize={50}>
             <div css={scrollContainer}>
-              <Sequencer/>
+              <Editor/>
             </div>
-          </SplitPane>
-          <div css={scrollContainer}>
-            <Editor/>
-          </div>
-        </SplitPane>
+          </ReflexElement>
+        </ReflexContainer>
       </ThemeProvider>
     </StateRoot>
   )
 
 }
 
+/*
+<SplitPane split="vertical" minSize={500} defaultSize={1280} css={{position: 'relative'}}>
+<SplitPane split="horizontal" minSize={500} defaultSize={1024} css={{height: 1}}>
+  <Canvas/>
+  <div css={scrollContainer}>
+    <Sequencer/>
+  </div>
+</SplitPane>
+<div css={scrollContainer}>
+  <Editor/>
+</div>
+</SplitPane>
+*/
 /*
 <div css={appCSS}>
 <div css={mainCSS}>

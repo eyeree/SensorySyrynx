@@ -249,7 +249,7 @@ const setupCSS = css(
 export function Setup() {
     const setupId = useCurrentSetupId();
     const programIds = useSetupProgramIdList(setupId);
-    return <Paper css={setupCSS} elevation={12} sx={{ padding: 1, margin: 1, overflow: "auto" }}>
+    return <Paper css={setupCSS} elevation={12} sx={{ padding: 1, overflow: "auto" }}>
         {programIds.map((programId, programIndex) =>
             <Program key={programIndex} setupId={setupId} programId={programId} programIndex={programIndex} />
         )}
