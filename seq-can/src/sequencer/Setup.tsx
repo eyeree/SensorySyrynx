@@ -1,72 +1,70 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react'
 import { Paper } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, PointerEvent as ReactPointerEvent } from 'react';
 import { arrayOf } from '../common/array';
 import { theme, flexRow } from '../common/css';
 import { usePrevious } from '../common/previous';
 import { ActionList, ActionListEntry, Runtime } from '../runtime';
 import { ProgramId, useProgramName, useProgramCode, useSetSelectedProgramId, useSetSelectedProgramError, ProgramErrorNullable } from '../state/program';
-import { StepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, ProgramIndex, useSelectedProgramIndexState } from '../state/setup';
+import { StepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, ProgramIndex, useSelectedProgramIndexState, useSelectedProgramIndex, useSetSelectedProgramIndex, SetupStepCount } from '../state/setup';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { AddProgramDialog } from './AddProgramDialog';
+import { Box } from '@mui/system';
+import { useActionTitleWidthState } from '../state/layout';
 
-const stepCSS = css({
-    width: 10,
-    height: 20,
-    margin: 1,
-    borderWidth: 1,
-    borderColor: 'black',
-    borderStyle: 'solid',
-})
-
-const programStepCommonCSS = css(
-    stepCSS,
+const stepCommonCSS = css(
     {
-        cursor: 'pointer'
+        cursor: 'pointer',
+        width: 10,
+        height: 20,
+        margin: 1,
+        borderWidth: 1,
+        borderColor: 'black',
+        borderStyle: 'solid',
     }
 )
 
-const programStepDisabledInactiveCSS = css(
-    programStepCommonCSS,
+const stepDisabledInactiveCSS = css(
+    stepCommonCSS,
     {
-        backgroundColor: 'dimgray',
+        backgroundColor: theme.palette.primary.dark,
     }
 )
 
-const programStepDisabledActiveCSS = css(
-    programStepCommonCSS,
+const stepDisabledActiveCSS = css(
+    stepCommonCSS,
     {
-        backgroundColor: 'grey',
+        backgroundColor: theme.palette.primary.light,
     }
 )
 
-const programStepEnabledInactiveCSS = css(
-    programStepCommonCSS,
+const stepEnabledInactiveCSS = css(
+    stepCommonCSS,
     {
-        backgroundColor: 'indigo',
+        backgroundColor: theme.palette.secondary.dark,
     }
 )
 
-const programStepEnabledActiveCSS = css(
-    programStepCommonCSS,
+const stepEnabledActiveCSS = css(
+    stepCommonCSS,
     {
-        backgroundColor: 'purple',
+        backgroundColor: theme.palette.secondary.light,
     }
 )
 
-function getProgramStepCSS(active: boolean, enabled: boolean) {
+function getStepCSS(active: boolean, enabled: boolean) {
     if (enabled) {
         if (active) {
-            return programStepEnabledActiveCSS
+            return stepEnabledActiveCSS
         } else {
-            return programStepEnabledInactiveCSS
+            return stepEnabledInactiveCSS
         }
     } else {
         if (active) {
-            return programStepDisabledActiveCSS
+            return stepDisabledActiveCSS
         } else {
-            return programStepDisabledInactiveCSS
+            return stepDisabledInactiveCSS
         }
     }
 }
@@ -78,7 +76,7 @@ function ActionStep({ setupId, programId, action, stepIndex }: ActionStepProps) 
     const active = useIsSetupStepActive(stepIndex);
     const wasActive = usePrevious(active);
 
-    const css = getProgramStepCSS(active, enabled);
+    const css = getStepCSS(active, enabled);
 
     const onClick = () => setEnabled(!enabled);
 
@@ -94,32 +92,60 @@ function ActionStep({ setupId, programId, action, stepIndex }: ActionStepProps) 
 
 const statusDotSize = theme.spacing(1.5)
 const statusDotMargin = theme.spacing(1)
-const actionIndent = theme.spacing(4)
+const actionIndent = theme.spacing(4.5)
 
-type ActionProps = { setupId: SetupId, programId: ProgramId, action: ActionListEntry }
-function Action({ setupId, programId, action }: ActionProps) {
-    const stepCount = useSetupStepCount(setupId);
+type MoveDivider = (delta:number) => void;
+type ActionProps = { setupId: SetupId, programId: ProgramId, action: ActionListEntry, stepCount:SetupStepCount, moveDivider:MoveDivider }
+
+function Action({ setupId, programId, action, stepCount, moveDivider }: ActionProps) {
+
+    const [dragging, setDragging] = useState(false);
+
+    const onPointerDown = (e:ReactPointerEvent<HTMLDivElement>) => { 
+        setDragging(true);
+        const div = e.target as HTMLDivElement
+        div.setPointerCapture(e.pointerId);
+    }
+    const onPointerUp = (e:ReactPointerEvent<HTMLDivElement>) => { 
+        setDragging(false); 
+        const div = e.target as HTMLDivElement
+        div.releasePointerCapture(e.pointerId);
+    }
+    const onPointerMove = (e:ReactPointerEvent<HTMLDivElement>) => {
+        if(dragging) {
+            moveDivider(e.movementX);
+        }
+    }
+
     return <>
-        <div css={css({ marginLeft: actionIndent, marginRight: statusDotMargin })}>{action.name}</div>
-        <div css={flexRow}>
-            {arrayOf(stepCount, stepIndex =>
-                <ActionStep key={stepIndex} setupId={setupId} programId={programId} action={action} stepIndex={stepIndex} />
-            )}
-        </div>
+        <div css={css({ marginLeft: actionIndent, marginRight: statusDotMargin, overflow: 'hidden'})}>{action.name}</div>
+        <Box onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} sx={{
+            borderColor: theme.palette.divider, 
+            borderLeftWidth: 1, 
+            borderLeftStyle: 'solid', 
+            width:theme.spacing(0.5), 
+            height:1, 
+            cursor: 'ew-resize'
+        }}/>
+        {arrayOf(stepCount, stepIndex =>
+            <ActionStep key={stepIndex} setupId={setupId} programId={programId} action={action} stepIndex={stepIndex} />
+        )}
     </>
 }
 
-type ProgramNameProps = { programId: ProgramId }
-function ProgramName({ programId }: ProgramNameProps) {
+type ProgramNameProps = { programId: ProgramId, programIndex: ProgramIndex }
+
+function ProgramName({ programId, programIndex }: ProgramNameProps) {
     const programName = useProgramName(programId);
     return <div>{programName}</div>
 }
 
 type ProgramStatusProps = { programId: ProgramId, programIndex: ProgramIndex, programError: ProgramErrorNullable }
+
 function ProgramStatus({ programId, programIndex, programError }: ProgramStatusProps) {
-    const [selectedProgramIndex, setSelectedProgramIndex] = useSelectedProgramIndexState();
     const setSelectedProgramId = useSetSelectedProgramId();
     const setSelectedProgramError = useSetSelectedProgramError();
+    const selectedProgramIndex = useSelectedProgramIndex();
     const isSelected = selectedProgramIndex === programIndex;
 
     useEffect(() => {
@@ -132,21 +158,19 @@ function ProgramStatus({ programId, programIndex, programError }: ProgramStatusP
     let color;
     if (programError) {
         if (isSelected) {
-            color = 'red'
+            color = theme.palette.error.light
         } else {
-            color = 'darkred'
+            color = theme.palette.error.dark
         }
     } else {
         if (isSelected) {
-            color = 'green'
+            color = theme.palette.success.light
         } else {
-            color = 'darkgreen'
+            color = theme.palette.success.dark
         }
     }
 
-    const onClick = () => setSelectedProgramIndex(programIndex)
-
-    return <div onClick={onClick} css={css({
+    return <div css={css({
         height: statusDotSize,
         width: statusDotSize,
         backgroundColor: color,
@@ -160,21 +184,30 @@ function ProgramStatus({ programId, programIndex, programError }: ProgramStatusP
 
 type ProgramInfoProps = { programId: ProgramId, programIndex: ProgramIndex, programError: ProgramErrorNullable }
 function ProgramInfo({ programId, programError, programIndex }: ProgramInfoProps) {
-    return <div css={css(flexRow, {
-        gridColumn: "1 / 3",
-    })}>
+
+    const [selectedProgramIndex, setSelectedProgramIndex] = useSelectedProgramIndexState();
+
+    const onClick = () => setSelectedProgramIndex(programIndex);
+
+    const background = selectedProgramIndex == programIndex ? theme.palette.secondary.dark : theme.palette.primary.dark;
+
+    return <Box sx={{display: 'flex', cursor: 'pointer', backgroundColor: background, paddingLeft: 1, marginBottom: 0.5}} onClick={onClick}>
         <ProgramStatus programId={programId} programIndex={programIndex} programError={programError} />
-        <ProgramName programId={programId} />
-    </div>
+        <ProgramName programId={programId} programIndex={programIndex} />
+    </Box>
 }
 
-type ProgramProps = { setupId: SetupId, programId: ProgramId, programIndex: ProgramIndex }
-function Program({ setupId, programId, programIndex }: ProgramProps) {
+type ProgramProps = { setupId: SetupId, programId: ProgramId, programIndex: ProgramIndex, titleWidth: number, moveDivider:MoveDivider }
+
+function Program({ setupId, programId, programIndex, titleWidth, moveDivider }: ProgramProps) {
 
     const code = useProgramCode(programId);
     const [programError, setProgramError] = useState<ProgramErrorNullable>(null);
     const [runtime, setRuntime] = useState<Runtime>()
     const [actions, setActions] = useState<ActionList>([])
+    const selectedProgramIndex = useSelectedProgramIndex();
+    const isSelected = programIndex == selectedProgramIndex;
+    const stepCount = useSetupStepCount(setupId);
 
     useEffect(
         () => {
@@ -200,10 +233,14 @@ function Program({ setupId, programId, programIndex }: ProgramProps) {
     )
 
     return <>
-        <ProgramInfo programId={programId} programError={programError} programIndex={programIndex} />
-        {actions.map(action =>
-            <Action key={action.name} setupId={setupId} programId={programId} action={action} />
-        )}
+        <Paper elevation={isSelected ? 12 : 9} sx={{padding:1, marginBottom: 1}}>
+            <ProgramInfo programId={programId} programError={programError} programIndex={programIndex} />
+            <Box sx={{display: 'grid', gridAutoRows: 'min-content', gridTemplateColumns: `${titleWidth}px min-content repeat(${stepCount}, min-content)`}}>
+            {actions.map(action =>
+                <Action key={action.name} setupId={setupId} programId={programId} action={action} stepCount={stepCount} moveDivider={moveDivider} />
+            )}
+            </Box>
+        </Paper>
     </>
 
 }
@@ -221,6 +258,8 @@ function AddProgram({ setupId }: AddProgramProps) {
         setOpen(false) 
     }
 
+    const ref = useRef<HTMLDivElement>(null);
+
     return <>
         <div css={css(flexRow, { gridColumn: "1 / 3", color: 'gray', cursor: 'pointer' })} onClick={onClick}>
             <div css={css({
@@ -231,27 +270,25 @@ function AddProgram({ setupId }: AddProgramProps) {
             })}>
                 <AddCircleOutlineIcon sx={{ width: statusDotSize, height: statusDotSize }} />
             </div>
-            <div>(add program)</div>
+            <div ref={ref}>(add program)</div>
         </div>
-        <AddProgramDialog setupId={setupId} open={open} onClose={onClose}/>
+        {ref.current ? <AddProgramDialog setupId={setupId} open={open} onClose={onClose} target={ref.current}/> : <div/>}
     </>
 }
 
-const setupCSS = css(
-    {
-        gridAutoColumns: "min-content",
-        gridAutoRows: "min-content",
-        display: "grid",
-        width: "100%"
-    }
-)
-
 export function Setup() {
+    const [titleWidth, setTitleWidth] = useActionTitleWidthState();
+    const moveDivider = (delta:number) => {
+        const newTitleWidth = titleWidth + delta;
+        if(newTitleWidth > 50 && newTitleWidth < 200) {
+            setTitleWidth(newTitleWidth);
+        }
+    }
     const setupId = useCurrentSetupId();
     const programIds = useSetupProgramIdList(setupId);
-    return <Paper css={setupCSS} elevation={12} sx={{ padding: 1, overflow: "auto" }}>
+    return <Paper elevation={6} sx={{ padding: 1, overflow: "auto", width: 1 }}>
         {programIds.map((programId, programIndex) =>
-            <Program key={programIndex} setupId={setupId} programId={programId} programIndex={programIndex} />
+            <Program key={programIndex} setupId={setupId} programId={programId} programIndex={programIndex} titleWidth={titleWidth} moveDivider={moveDivider} />
         )}
         <AddProgram setupId={setupId} />
     </Paper>

@@ -7,46 +7,13 @@ import { Sequencer } from '../sequencer';
 import { StateRoot } from '../state/StateRoot';
 import CssBaseline from '@mui/material/CssBaseline';
 
-import { flexRow, flexColumn, theme } from '../common/css';
-import { createTheme, Paper, ThemeOptions, ThemeProvider } from '@mui/material';
-import SplitPane from 'react-split-pane';
+import { theme } from '../common/css';
+import { ThemeProvider } from '@mui/material';
 
-import './split-pane.css'
 import { HandlerProps, ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
 import 'react-reflex/styles.css'
-import { atom, useRecoilState } from 'recoil';
-import { persistAtom } from '../state/persistance';
-import { logAtom } from '../state/log';
+import { useCanvasSizeState } from '../state/layout';
 
-const appCSS = css(
-    flexRow,
-    {
-        height: "100%",
-    }
-)
-
-const mainCSS = css(
-    flexColumn,
-    {
-        flexGrow: 1
-    }
-)
-
-const editorCSS = css({
-    minWidth: 500,
-    display: "flex"
-    // height: "100%"
-})
-
-const canvasCSS = css({
-    flexGrow: 1,
-    // display: "flex"
-    // backgroundColor: "red",
-})
-
-const sequencerCSS = css({
-    minHeight: 200,
-})
 
 const scrollContainer = css({
     position: 'absolute',
@@ -58,30 +25,25 @@ const scrollContainer = css({
     overflow: "hidden"
 })
 
-type CanvasSize = { width: number, height: number }
-const canvasSizeState = atom<CanvasSize>({
-    key: "canvasSize",
-    default: { width: 0.8, height: 0.8 },
-    effects: [persistAtom]
-})
+
 
 function Layout() {
 
-    const [canvasSize, setCanvasSize] = useRecoilState(canvasSizeState)
+    const [canvasSize, setCanvasSize] = useCanvasSizeState();
 
-    const onResizeHeight = (e: HandlerProps) => {
+    const onResizedHeight = (e: HandlerProps) => {
         setCanvasSize({ ...canvasSize, height: e.component.props.flex ?? 0.8 })
     }
 
-    const onResizeWidth = (e: HandlerProps) => {
+    const onResizedWidth = (e: HandlerProps) => {
         setCanvasSize({ ...canvasSize, width: e.component.props.flex ?? 0.8 })
     }
 
     return (
         <ReflexContainer orientation="vertical" style={{ padding: theme.spacing(1) }}>
-            <ReflexElement minSize={300} flex={canvasSize.width} onResize={onResizeWidth}>
+            <ReflexElement minSize={300} flex={canvasSize.width} onStopResize={onResizedWidth}>
                 <ReflexContainer orientation="horizontal">
-                    <ReflexElement minSize={300} flex={canvasSize.height} onResize={onResizeHeight}>
+                    <ReflexElement minSize={300} flex={canvasSize.height} onStopResize={onResizedHeight}>
                         <div css={scrollContainer}>
                             <Canvas />
                         </div>

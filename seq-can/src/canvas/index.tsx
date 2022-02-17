@@ -5,6 +5,7 @@ import React from 'react'
 import createjs from 'eyeree-createjs-module';
 import DisplayObject = createjs.DisplayObject;
 import { Paper } from '@mui/material';
+import { theme } from '../common/css';
 
 let stage: createjs.Stage;
 
@@ -47,7 +48,13 @@ const wrapperCSS = css(
     {
         backgroundColor: "pink",
         width: "100%",
-        height: "100%"
+        height: "100%",
+        borderRightColor: "#464646",
+        borderBottomColor: "#464646",
+        borderTopColor: "#838383",
+        borderLeftColor: "#838383",
+        borderStyle: "inset",
+        borderWidth: 4
     }
 )
 
@@ -97,7 +104,7 @@ export function Canvas(props: CanvasProps) {
         }
     }, []);
 
-    return <Paper elevation={6} sx={{ padding: 1, width: 1 }}>
+    return <Paper elevation={3} sx={{ padding: 1, width: 1 }}>
         <div css={wrapperCSS}>
             <canvas css={canvasCSS} ref={canvasRef} />
         </div>

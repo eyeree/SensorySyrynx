@@ -1,4 +1,4 @@
-import { atom, atomFamily, DefaultValue, selector, useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { atom, atomFamily, DefaultValue, selector, useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { persistAtom } from './persistance';
 
 import { ActionName, ProgramId, ProgramIdList, useCreateProgram } from './program'
@@ -139,6 +139,8 @@ export const useSetIsSetupStepActive = () => useRecoilCallback(({set}) => (stepI
 })
 
 export const useSelectedProgramIndexState = () => useRecoilState(selectedProgramIndex)
+export const useSelectedProgramIndex = () => useRecoilValue(selectedProgramIndex)
+export const useSetSelectedProgramIndex = () => useSetRecoilState(selectedProgramIndex)
 
 export const useCurrentSetupId = () => useRecoilValue(currentSetupId);
 export const useSetCurrentSetupId = () => useRecoilCallback(({set}) => (setupId:SetupId) => {

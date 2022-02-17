@@ -1,22 +1,25 @@
 
-import Button from '@mui/material/Button';
 import List from '@mui/material/List';
 import ListItemText from '@mui/material/ListItemText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
 import { SetupId, useAppendSetupProgramIdListEntry } from '../state/setup';
-import { DialogActions, ListItemButton } from '@mui/material';
-import { useCreateProgram, useProgramList } from '../state/program';
+import { Checkbox, FormControlLabel, ListItemButton, Typography } from '@mui/material';
+import { ProgramId, useCreateProgram, useProgramList } from '../state/program';
+import { useState } from 'react';
+import { Label } from '@mui/icons-material';
+import { theme } from '../common/css';
 
-export type AddProgramProps = { setupId: SetupId, open: boolean, onClose: () => void }
+export type AddProgramProps = { setupId: SetupId, open: boolean, onClose: () => void, target: HTMLDivElement }
 
-export function AddProgramDialog({ setupId, open, onClose }: AddProgramProps) {
+export function AddProgramDialog({ setupId, open, onClose, target }: AddProgramProps) {
 
     // console.log("AddProgramDialog", open);
 
     const programs = useProgramList()
     const createProgram = useCreateProgram();
     const appendSetupProgramIdListEntry = useAppendSetupProgramIdListEntry(setupId);
+    const [copySelected, setCopySelected] = useState<boolean>(false);
 
     const handleCreate = () => {
         const programId = createProgram();
@@ -25,41 +28,38 @@ export function AddProgramDialog({ setupId, open, onClose }: AddProgramProps) {
         onClose();
     };
 
-    const handleAdd = () => {
-        console.log("handleAdd")
+    const handleCopy = (programId: ProgramId) => {
+        console.log("handleCopy", programId)
         onClose();
     };
 
-    const handleCopy = () => {
-        console.log("handleCopy")
+    const handleAdd = (programId: ProgramId) => {
+        console.log("handleAdd", programId)
         onClose();
     };
 
-    const handleListItemClick = (value: string) => {
-        console.log("handleListItemClick", value)
-        onClose();
-    };
-
-    const handleClose = (...args:any[]) => {
-        console.log("handleClose", args)
+    const handleClose = () => {
         onClose();
     }
 
+    // primaryTypographyProps={{ style: {color: "palette.secondary.main"} }}
     return (
         <Dialog onClose={handleClose} open={open}>
             <DialogTitle>Add Program</DialogTitle>
             <List sx={{ pt: 0 }}>
+                <ListItemButton onClick={handleCreate}  sx={{background: theme.palette.secondary.main}}>
+                    <ListItemText>New Program</ListItemText>
+                </ListItemButton>
                 {programs.map(({programId, programName}, index) => (
-                    <ListItemButton onDoubleClick={() => handleListItemClick(programId)} key={programId} autoFocus={index === 0}>
+                    <ListItemButton key={programId} onClick={() => handleAdd(programId)}>
                         <ListItemText primary={programName} />
                     </ListItemButton>
                 ))}
             </List>
-            <DialogActions>
-                <Button onClick={handleCreate} variant="outlined" autoFocus>Create New</Button>
-                <Button onClick={handleAdd}>Add Selected</Button>
-                <Button onClick={handleCopy}>Copy Selected</Button>
-            </DialogActions>
+            <FormControlLabel
+                control={<Checkbox onChange={(_, selected:boolean) => setCopySelected(selected)} />} 
+                label="Copy Program" sx={{alignSelf:"center", marginRight:0, color: theme.palette.text.secondary, fontWeight: theme.typography.fontWeightLight}}
+            />
         </Dialog>
     );
 }
