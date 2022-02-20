@@ -13,6 +13,7 @@ export type SetupName = string;
 export type SetupIdList = Array<SetupId>;
 export type SetupListEntry = { setupId: string, setupName: string }
 export type SetupList = Array<SetupListEntry>
+export type SetupProgramIndexKey = { setupId: SetupId, programIndex: ProgramIndex }
 
 export type StepIndex = number;
 export type StepStatus = boolean;
@@ -62,6 +63,18 @@ const setupStepCount = atomFamily<SetupStepCount, SetupId>({
 const isSetupStepActive = atomFamily<StepStatus, StepIndex>({
     key: "isSetupStepActive",
     default: false
+})
+
+const setupProgramIndexCollapsed = atomFamily<boolean, SetupProgramIndexKey>({
+    key: "setupProgramIndexCollapsed",
+    default: (key) => false,
+    effects: [persistAtom]
+})
+
+const setupProgramIndexEnabled = atomFamily<boolean, SetupProgramIndexKey>({
+    key: "setupProgramIndexEnabled",
+    default: true,
+    effects: [persistAtom]
 })
 
 const selectedProgramIndex = atom<ProgramIndex>({
@@ -116,15 +129,11 @@ const setupStepStatus = atomFamily<StepStatus, StepStatusKey>({
 });
 
 export const useSetupProgramIdList = (setupId:SetupId) => useRecoilValue(setupProgramIdList(setupId));
-export const useAppendSetupProgramIdListEntry = (setupId:SetupId) => useRecoilCallback(({set}) => (programId:ProgramId) => {
-    console.log("useAppendSetupProgramIdListEntry")
-    let index = -1;
-    set(setupProgramIdList(setupId), oldList => {
-        console.log("set callback")
-        index = oldList.length;
-        return [...oldList, programId]
-    })
-    return index;
+export const useAppendSetupProgramIdListEntry = (setupId:SetupId) => useRecoilCallback(({set}) => (newProgramId:ProgramId) => {
+    set(setupProgramIdList(setupId), oldList => [...oldList, newProgramId])
+})
+export const useRemoveSetupProgramIdListEntry = (setupId:SetupId) => useRecoilCallback(({set}) => (removedProgramId:ProgramId) => {
+    set(setupProgramIdList(setupId), oldList => oldList.filter(programId => programId !== removedProgramId))
 })
 
 export const useSetupList = () => useRecoilValue(setupList)
@@ -180,4 +189,11 @@ export function useCreateSetup() {
   
   }
   
-  
+  export const useSetupProgramIndexCollapsed = (setupId:SetupId, programIndex:ProgramIndex) => useRecoilValue(setupProgramIndexCollapsed({setupId, programIndex}))
+  export const useSetSetupProgramIndexCollapsed = (setupId:SetupId, programIndex:ProgramIndex) => useSetRecoilState(setupProgramIndexCollapsed({setupId, programIndex}))
+  export const useSetupProgramIndexCollapsedState = (setupId:SetupId, programIndex:ProgramIndex) => useRecoilState(setupProgramIndexCollapsed({setupId, programIndex}))
+
+  export const useSetupProgramIndexEnabled = (setupId:SetupId, programIndex:ProgramIndex) => useRecoilValue(setupProgramIndexEnabled({setupId, programIndex}))
+  export const useSetSetupProgramIndexEnabled = (setupId:SetupId, programIndex:ProgramIndex) => useSetRecoilState(setupProgramIndexEnabled({setupId, programIndex}))
+  export const useSetupProgramIndexEnabledState = (setupId:SetupId, programIndex:ProgramIndex) => useRecoilState(setupProgramIndexEnabled({setupId, programIndex}))
+

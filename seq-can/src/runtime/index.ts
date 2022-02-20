@@ -96,15 +96,18 @@ export class Runtime {
     public actions:ActionList = [];
     public error:ProgramErrorNullable = null;
 
+    private _enabled:boolean = true;
+    private code:string = "";
+
     constructor(code:ProgramCode, private setError:SetErrorFunction) {
         this.setCode(code);
     }
 
-    clearError() {
+    private clearError() {
         this.setError(null)
     }
 
-    handleException(e:any) {
+    private handleException(e:any) {
     
         let line = 0;
         let column = 0;
@@ -132,7 +135,11 @@ export class Runtime {
     
     }
 
-    setCode(code:ProgramCode) {
+    public reset() {
+        this.setCode(this.code);
+    }
+
+    public setCode(code:ProgramCode) {
 
         // If anything goes wrong while initializing the new code, leave the old code
         // running and report the error. If successful, the new code's new container 
@@ -144,27 +151,22 @@ export class Runtime {
             const init = this.getInitializationFunction(code);        
             const initResult = init({...programArgs, container});
             this.load(initResult, container);
+            this.code = code;
             this.clearError();
         } catch(e:any) {
             this.handleException(e);
             return;
         }
 
-        // (note that this code is skipped if there is an error)
-
-        if(this.container) removeFromStage(this.container);
-        this.container = container;
-        addToStage(this.container);
-
     }
 
-    getInitializationFunction(code: string):ProgramFunction {
+    private getInitializationFunction(code: string):ProgramFunction {
         const source = `return function PROGRAM_ROOT (_) {\n${code}\n}`;
         const wrapper = new Function(source); // eslint-disable-line no-new-func
         return wrapper();
     }
 
-    unload() {
+    public unload() {
         if(this.container) {
             removeFromStage(this.container);
             this.container = null;
@@ -172,7 +174,7 @@ export class Runtime {
         this.actions = [] 
     }
 
-    load(initResult:ProgramReturn, container:Container) {
+    private load(initResult:ProgramReturn, container:Container) {
 
         let actions:ActionList = []
 
@@ -188,13 +190,13 @@ export class Runtime {
 
         this.actions = actions;
 
-        if(this.container) removeFromStage(this.container);
+        if(this.container && this._enabled) removeFromStage(this.container);
         this.container = container;
-        addToStage(this.container);
+        if(this._enabled) addToStage(this.container);
 
     }
 
-    loadActions(actions:ActionMap) {
+    private loadActions(actions:ActionMap) {
 
         return Object.entries(actions).map(([name, value]) => {
             if(typeof name != 'string') {
@@ -204,6 +206,7 @@ export class Runtime {
                 throw new Error(`Action "${name}" is not a function.`);
             }
             const fn = (args:ActionArgs) => {
+                if(!this._enabled) return;
                 try {
                     value(args);
                 } catch(e:any) {
@@ -213,6 +216,26 @@ export class Runtime {
             return {name, fn}
         })
 
+    }
+
+    public get enabled() {
+        return this._enabled;
+    }
+
+    public set enabled(value:boolean) {
+        if(value != this._enabled) {
+            if(this._enabled) {
+                if(this.container) {
+                    removeFromStage(this.container);
+                }
+                this._enabled = false;
+            } else {
+                if(this.container) {
+                    addToStage(this.container);
+                }
+                this._enabled = true;
+            }
+        }
     }
 
 }

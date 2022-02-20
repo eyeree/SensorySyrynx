@@ -1,17 +1,23 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react'
-import { Paper } from '@mui/material';
-import { useEffect, useRef, useState, PointerEvent as ReactPointerEvent } from 'react';
+import { Button, IconButton, List, ListItem, Paper } from '@mui/material';
+import { useEffect, useRef, useState, PointerEvent as ReactPointerEvent, useLayoutEffect } from 'react';
 import { arrayOf } from '../common/array';
 import { theme, flexRow } from '../common/css';
 import { usePrevious } from '../common/previous';
 import { ActionList, ActionListEntry, Runtime } from '../runtime';
 import { ProgramId, useProgramName, useProgramCode, useSetSelectedProgramId, useSetSelectedProgramError, ProgramErrorNullable } from '../state/program';
-import { StepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, ProgramIndex, useSelectedProgramIndexState, useSelectedProgramIndex, useSetSelectedProgramIndex, SetupStepCount } from '../state/setup';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { AddProgramDialog } from './AddProgramDialog';
+import { StepIndex, useSetupStepStatusState, SetupId, useIsSetupStepActive, useCurrentSetupId, useSetupProgramIdList, useSetupStepCount, ProgramIndex, useSelectedProgramIndexState, useSelectedProgramIndex, useSetSelectedProgramIndex, SetupStepCount, useSetupProgramIndexCollapsed, useSetupProgramIndexCollapsedState, useSetupProgramIndexEnabledState, useRemoveSetupProgramIdListEntry, useSetupProgramIndexEnabled } from '../state/setup';
+import { AddProgram, AddProgramResult } from './AddProgram';
 import { Box } from '@mui/system';
 import { useActionTitleWidthState } from '../state/layout';
+import { atom, useSetRecoilState } from 'recoil';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 const stepCommonCSS = css(
     {
@@ -90,14 +96,10 @@ function ActionStep({ setupId, programId, action, stepIndex }: ActionStepProps) 
 
 }
 
-const statusDotSize = theme.spacing(1.5)
-const statusDotMargin = theme.spacing(1)
-const actionIndent = theme.spacing(4.5)
+type UpdateTitleWidth = (delta:number) => void;
+type ActionProps = { setupId: SetupId, programId: ProgramId, action: ActionListEntry, stepCount:SetupStepCount, updateTitleWidth:UpdateTitleWidth }
 
-type MoveDivider = (delta:number) => void;
-type ActionProps = { setupId: SetupId, programId: ProgramId, action: ActionListEntry, stepCount:SetupStepCount, moveDivider:MoveDivider }
-
-function Action({ setupId, programId, action, stepCount, moveDivider }: ActionProps) {
+function Action({ setupId, programId, action, stepCount, updateTitleWidth: moveDivider }: ActionProps) {
 
     const [dragging, setDragging] = useState(false);
 
@@ -118,7 +120,7 @@ function Action({ setupId, programId, action, stepCount, moveDivider }: ActionPr
     }
 
     return <>
-        <div css={css({ marginLeft: actionIndent, marginRight: statusDotMargin, overflow: 'hidden'})}>{action.name}</div>
+        <Box sx={{ marginLeft: 1, marginRight: 1, overflow: 'hidden'}}>{action.name}</Box>
         <Box onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerMove={onPointerMove} sx={{
             borderColor: theme.palette.divider, 
             borderLeftWidth: 1, 
@@ -140,13 +142,25 @@ function ProgramName({ programId, programIndex }: ProgramNameProps) {
     return <div>{programName}</div>
 }
 
-type ProgramStatusProps = { programId: ProgramId, programIndex: ProgramIndex, programError: ProgramErrorNullable }
+type ProgramInfoProps = { 
+    setupId:SetupId, 
+    programId: ProgramId, 
+    programIndex: ProgramIndex, 
+    programError: ProgramErrorNullable, 
+    beginRename: boolean, 
+    runtimeEnabled: (enabled:boolean) => void,
+    resetRuntime: () => void
+}
 
-function ProgramStatus({ programId, programIndex, programError }: ProgramStatusProps) {
+function ProgramInfo({ setupId, programId, programError, programIndex, beginRename, runtimeEnabled, resetRuntime }: ProgramInfoProps) {
+
     const setSelectedProgramId = useSetSelectedProgramId();
     const setSelectedProgramError = useSetSelectedProgramError();
-    const selectedProgramIndex = useSelectedProgramIndex();
+    const [selectedProgramIndex, setSelectedProgramIndex] = useSelectedProgramIndexState();
     const isSelected = selectedProgramIndex === programIndex;
+    const [collapsed, setCollapsed] = useSetupProgramIndexCollapsedState(setupId, programIndex);
+    const [enabled, setEnabled] = useSetupProgramIndexEnabledState(setupId, programIndex);
+    const removeSetupProgramIdListEntry = useRemoveSetupProgramIdListEntry(setupId);
 
     useEffect(() => {
         if (isSelected) {
@@ -155,51 +169,51 @@ function ProgramStatus({ programId, programIndex, programError }: ProgramStatusP
         }
     }, [isSelected, programError, programId, setSelectedProgramError, setSelectedProgramId])
 
-    let color;
+    const onClick = () => setSelectedProgramIndex(programIndex);
+
+    let background:string;
     if (programError) {
         if (isSelected) {
-            color = theme.palette.error.light
+            background = theme.palette.error.light
         } else {
-            color = theme.palette.error.dark
+            background = theme.palette.error.dark
         }
     } else {
         if (isSelected) {
-            color = theme.palette.success.light
+            background = theme.palette.secondary.dark
         } else {
-            color = theme.palette.success.dark
+            background = theme.palette.primary.dark
         }
     }
 
-    return <div css={css({
-        height: statusDotSize,
-        width: statusDotSize,
-        backgroundColor: color,
-        borderRadius: "50%",
-        display: "inline-block",
-        marginRight: statusDotMargin,
-        alignSelf: 'center'
-    })}></div>
+    const onToggleCollapsed = () => setCollapsed(!collapsed)
+    const onRestart = () => resetRuntime();
+    const onToggleEnabled = () => {
+        setEnabled(!enabled);
+        runtimeEnabled(!enabled);
+    }
+    const onRemove = () => removeSetupProgramIdListEntry(programId);
 
-}
-
-type ProgramInfoProps = { programId: ProgramId, programIndex: ProgramIndex, programError: ProgramErrorNullable }
-function ProgramInfo({ programId, programError, programIndex }: ProgramInfoProps) {
-
-    const [selectedProgramIndex, setSelectedProgramIndex] = useSelectedProgramIndexState();
-
-    const onClick = () => setSelectedProgramIndex(programIndex);
-
-    const background = selectedProgramIndex == programIndex ? theme.palette.secondary.dark : theme.palette.primary.dark;
-
-    return <Box sx={{display: 'flex', cursor: 'pointer', backgroundColor: background, paddingLeft: 1, marginBottom: 0.5}} onClick={onClick}>
-        <ProgramStatus programId={programId} programIndex={programIndex} programError={programError} />
-        <ProgramName programId={programId} programIndex={programIndex} />
+    return <Box sx={{display: 'flex', cursor: 'pointer', backgroundColor: background, marginBottom: 0.5, alignItems: "center"}} onClick={onClick}>
+        <IconButton size="small" onClick={onToggleCollapsed}>{collapsed ? <ExpandMoreIcon/> : <ExpandLessIcon/>}</IconButton>
+        <Box sx={{flexGrow:1}}><ProgramName programId={programId} programIndex={programIndex} /></Box>
+        <IconButton size="small" onClick={onRestart}><RestartAltIcon/></IconButton>
+        <IconButton size="small" onClick={onToggleEnabled}>{enabled ? <VisibilityIcon/> : <VisibilityOffIcon/>}</IconButton>
+        <IconButton size="small" onClick={onRemove}><RemoveCircleOutlineIcon/></IconButton>
     </Box>
 }
 
-type ProgramProps = { setupId: SetupId, programId: ProgramId, programIndex: ProgramIndex, titleWidth: number, moveDivider:MoveDivider }
+type ProgramProps = { 
+    setupId: SetupId, 
+    programId: ProgramId, 
+    programIndex: ProgramIndex, 
+    titleWidth: number, 
+    updateTitleWidth:UpdateTitleWidth,
+    beginRename: boolean,
+    ensureVisible: boolean
+}
 
-function Program({ setupId, programId, programIndex, titleWidth, moveDivider }: ProgramProps) {
+function Program({ setupId, programId, programIndex, titleWidth, updateTitleWidth, beginRename, ensureVisible}: ProgramProps) {
 
     const code = useProgramCode(programId);
     const [programError, setProgramError] = useState<ProgramErrorNullable>(null);
@@ -208,10 +222,15 @@ function Program({ setupId, programId, programIndex, titleWidth, moveDivider }: 
     const selectedProgramIndex = useSelectedProgramIndex();
     const isSelected = programIndex == selectedProgramIndex;
     const stepCount = useSetupStepCount(setupId);
+    const collapsed = useSetupProgramIndexCollapsed(setupId, programIndex);
+    const enabled = useSetupProgramIndexEnabled(setupId, programIndex);
+
+    // console.log("Program", programIndex, beginRename, ensureVisible);
 
     useEffect(
         () => {
             const runtime = new Runtime(code, setProgramError);
+            runtime.enabled = enabled;
             setActions(runtime.actions);
             setRuntime(runtime);
             return () => runtime.unload()
@@ -232,12 +251,44 @@ function Program({ setupId, programId, programIndex, titleWidth, moveDivider }: 
         // we know that runtime will never change, only need to track code changes
     )
 
+    useEffect(
+        () => {
+            if (runtime) {
+                runtime.enabled = enabled;
+            }
+        },
+        [enabled] // eslint-disable-line react-hooks/exhaustive-deps
+        // we know that runtime will never change, only need to track enable changes 
+    )
+
+    const ref = useRef<HTMLDivElement>(null);
+
+    const runtimeEnabled = (enabled:boolean) => {
+        if(runtime) {
+            // runtime.enabled = enabled;
+        }
+    }
+
+    const resetRuntime = () => {
+        if(runtime) {
+            runtime.reset();
+            setActions(runtime.actions);
+        }
+    }
+
     return <>
-        <Paper elevation={isSelected ? 12 : 9} sx={{padding:1, marginBottom: 1}}>
-            <ProgramInfo programId={programId} programError={programError} programIndex={programIndex} />
-            <Box sx={{display: 'grid', gridAutoRows: 'min-content', gridTemplateColumns: `${titleWidth}px min-content repeat(${stepCount}, min-content)`}}>
+        <Paper elevation={isSelected ? 18 : 9} sx={{padding:1, width: 1}} ref={ref}>
+            <ProgramInfo setupId={setupId} programId={programId} programError={programError} programIndex={programIndex} beginRename={beginRename} runtimeEnabled={runtimeEnabled} resetRuntime={resetRuntime} />
+            <Box sx={{display: collapsed ? 'none' : 'grid', gridAutoRows: 'min-content', gridTemplateColumns: `${titleWidth}px min-content repeat(${stepCount}, min-content)`}}>
             {actions.map(action =>
-                <Action key={action.name} setupId={setupId} programId={programId} action={action} stepCount={stepCount} moveDivider={moveDivider} />
+                <Action 
+                    key={action.name} 
+                    setupId={setupId} 
+                    programId={programId} 
+                    action={action} 
+                    stepCount={stepCount} 
+                    updateTitleWidth={updateTitleWidth} 
+                />
             )}
             </Box>
         </Paper>
@@ -245,52 +296,68 @@ function Program({ setupId, programId, programIndex, titleWidth, moveDivider }: 
 
 }
 
-type AddProgramProps = { setupId: SetupId }
-function AddProgram({ setupId }: AddProgramProps) {
-
-    const [open, setOpen] = useState(false);
-
-    // console.log("AddProgram", open);
-
-    const onClick = () => { setOpen(true) }
-    const onClose = () => { 
-        console.log("---> setOpen(false)")
-        setOpen(false) 
-    }
-
-    const ref = useRef<HTMLDivElement>(null);
-
-    return <>
-        <div css={css(flexRow, { gridColumn: "1 / 3", color: 'gray', cursor: 'pointer' })} onClick={onClick}>
-            <div css={css({
-                height: statusDotSize,
-                width: statusDotSize,
-                display: "inline-block",
-                marginRight: statusDotMargin
-            })}>
-                <AddCircleOutlineIcon sx={{ width: statusDotSize, height: statusDotSize }} />
-            </div>
-            <div ref={ref}>(add program)</div>
-        </div>
-        {ref.current ? <AddProgramDialog setupId={setupId} open={open} onClose={onClose} target={ref.current}/> : <div/>}
-    </>
-}
 
 export function Setup() {
+    
     const [titleWidth, setTitleWidth] = useActionTitleWidthState();
-    const moveDivider = (delta:number) => {
+    const updateTitleWidth = (delta:number) => {
         const newTitleWidth = titleWidth + delta;
         if(newTitleWidth > 50 && newTitleWidth < 200) {
             setTitleWidth(newTitleWidth);
         }
     }
+    
     const setupId = useCurrentSetupId();
     const programIds = useSetupProgramIdList(setupId);
-    return <Paper elevation={6} sx={{ padding: 1, overflow: "auto", width: 1 }}>
-        {programIds.map((programId, programIndex) =>
-            <Program key={programIndex} setupId={setupId} programId={programId} programIndex={programIndex} titleWidth={titleWidth} moveDivider={moveDivider} />
-        )}
-        <AddProgram setupId={setupId} />
+
+    const [renameProgramIndex, setRenameProgramIndex] = useState<number|null>(null);
+    const [visibleProgramIndex, setVisibleProgramIndex] = useState<number|null>(null);
+
+    const setSelectedProgramIndex = useSetSelectedProgramIndex();
+
+    console.log("Setup", renameProgramIndex, visibleProgramIndex);
+
+    const scrollRef = useRef<HTMLLIElement>(null);
+
+    const onAddProgram = ({isNew}:AddProgramResult) => {
+        const newProgramIndex = programIds.length;
+        if(isNew) {
+            setRenameProgramIndex(newProgramIndex);
+        }
+        setVisibleProgramIndex(newProgramIndex);
+        setSelectedProgramIndex(newProgramIndex);
+        console.log("OnAddProgram", newProgramIndex)
+    }
+
+    useEffect(() => {
+        console.log("reset program indexes", visibleProgramIndex)
+        if(visibleProgramIndex != null && scrollRef.current) {
+            console.log("scroll into view")
+            scrollRef.current.scrollIntoView({behavior:"smooth"})
+        }
+        // setRenameProgramIndex(null);
+        // setVisibleProgramIndex(null);
+    }, [renameProgramIndex, visibleProgramIndex])
+
+    return <Paper elevation={6} sx={{ overflow: "hidden", width: 1 }}>
+        <List sx={{overflow: "auto", position: 'relative', width: 1, height: 1 }} dense={true}>
+            {programIds.map((programId, programIndex) =>
+                <ListItem key={programIndex}>
+                    <Program 
+                        setupId={setupId} 
+                        programId={programId} 
+                        programIndex={programIndex} 
+                        titleWidth={titleWidth} 
+                        updateTitleWidth={updateTitleWidth}
+                        beginRename={renameProgramIndex === programIndex}
+                        ensureVisible={visibleProgramIndex === programIndex} 
+                    />
+                </ListItem>
+            )}
+            <ListItem ref={scrollRef}>
+                <AddProgram setupId={setupId} onAddProgram={onAddProgram} />
+            </ListItem>
+        </List>
     </Paper>
 }
 

@@ -100,18 +100,12 @@ export const useSelectedProgramId = () => useRecoilValue(selectedProgramId)
 
 export function useCreateProgram() {
 
-    const programs = useProgramList();
-
-    return useRecoilCallback(({ set }) => () => {
-
-        let n = 1
-        let newName: string
-        const isNotUnique = () => programs.some(({programName}) => newName === programName)
-        do {
-            newName = `program ${n++}`
-        } while (isNotUnique())
+    return useRecoilCallback(({ set, snapshot }) => () => {
   
+        const programs = snapshot.getLoadable(programList).contents;
+        const newName = makeUniqueProgramName(programs, n => `program ${n}`)
         const programId = newId();
+        
         set(programIdList, programIds => [...programIds, programId])
         set(programName(programId), newName)
 
@@ -121,3 +115,39 @@ export function useCreateProgram() {
 
 }
 
+function cleanProgramName(programName:ProgramName) {
+    return programName.replace(/ ?\(copy \d+\)/, "")
+}
+
+export function useCopyProgram() {
+
+    return useRecoilCallback(({ set, snapshot }) => (sourceProgramId:ProgramId) => {
+
+        const programs = snapshot.getLoadable(programList).contents;
+        const sourceProgramName = cleanProgramName(snapshot.getLoadable(programName(sourceProgramId)).contents);
+        const sourceProgramCode = snapshot.getLoadable(programCode(sourceProgramId)).contents;
+        const newName = makeUniqueProgramName(programs, n => `${sourceProgramName} (copy ${n})`)
+        const programId = newId();
+
+        set(programIdList, programIds => [...programIds, programId])
+        set(programName(programId), newName)
+        set(programCode(programId), sourceProgramCode);
+
+        return programId;
+
+    })
+
+}
+
+function makeUniqueProgramName(list:ProgramList, format:((n:number)=>string)) {
+
+    let n = 1
+    let newName: string
+    const isNotUnique = () => list.some(({programName}) => newName === programName)
+    do {
+        newName = format(n++);
+    } while (isNotUnique())
+
+    return newName
+
+}
