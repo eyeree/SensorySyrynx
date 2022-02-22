@@ -6,7 +6,8 @@ import { atomFamily, RecoilRoot, useRecoilState } from 'recoil'
 import { persistantAtomFamily, persistAtomFamily } from './persistance'
 import { newId } from './id';
 import { useEffect } from 'react';
-import { Example } from './evtctx';
+
+import { Example } from './example'
 
 
 type ProgramId = string
@@ -103,9 +104,7 @@ const setupState = persistantAtomFamily<Setup, SetupId>("setup", setupId => ({
 }))
 
 function Viewer() {
-  return <div>
-    <Example/>
-  </div>
+  return <Example/>
 }
 
 function Changer() {
@@ -135,9 +134,7 @@ function App() {
 
   return (
     <RecoilRoot>
-      <Initializer/>
-      <Changer/>
-      <Viewer/>
+      <Example/>
     </RecoilRoot>
   );
 }
