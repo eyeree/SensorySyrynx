@@ -1,5 +1,7 @@
+import './App.css';
+
 import { createContext, ReactNode, useContext, useEffect, useState } from "react"
-import { atom, atomFamily, useRecoilCallback, useRecoilState, useRecoilValue } from "recoil"
+import { RecoilRoot, atomFamily, useRecoilCallback, useRecoilState, useRecoilValue } from "recoil"
 
 // https://zelark.github.io/nano-id-cc/ ==> At 100 IDs per hour ~148 years needed, in order to 
 // have a 1% probability of at least one collision. If/when multi-user, will be in the scope of
@@ -112,15 +114,14 @@ export const Entity = <TProperties extends EntityPropertyMap>(properties: TPrope
     const Context = createContext<ContextState>("")
 
     const ComponentFunction = (props:EntityComponentProps) => {
-        const _newId = newId()
-        const [contextId,] = useState(_newId)
+        const [contextId,] = useState(() => newId()) // Why am I seeing two different contextIds?
         const [state, setState] = useRecoilState(stateAtom(contextId))
-        console.log("Entity", atomId, contextId, "ComponentFunction", state, props.id, _newId);
+        console.log("Entity", atomId, contextId, "ComponentFunction", state, props.id);
         // TODO: initialization of id is delayed... fix that somehow? use Suspend or something?
         useEffect(() => {
             console.log("Entity", atomId, contextId, "ComponentFunction", "useEffect", state, props.id);
             setState({...state, entityId:props.id ?? null})
-        }, []) // eslint-disable-line react-hooks/exhaustive-deps
+        }, [props.id]) // eslint-disable-line react-hooks/exhaustive-deps
         return true // state.entityId 
             ? <Context.Provider value={contextId}>entity - {state.entityId} - {props.children}</Context.Provider> 
             : <></> 
@@ -168,7 +169,7 @@ const Nested = () => {
     return <div onClick={onClick}>Click</div>
 }
 
-export const Example = () => {
+const Example = () => {
     console.log("Example");
     
     return <ToDoItem id={"foo-bar"}>
@@ -177,3 +178,15 @@ export const Example = () => {
 
 }
 
+function App() {
+
+  console.log("App");
+
+  return (
+    <RecoilRoot>
+      <Example/>
+    </RecoilRoot>
+  );
+}
+
+export default App;

@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react"
-import { atom, atomFamily, useRecoilCallback, useRecoilState, useRecoilValue } from "recoil"
+import { atomFamily, useRecoilCallback, useRecoilState, useRecoilValue } from "recoil"
 
 // https://zelark.github.io/nano-id-cc/ ==> At 100 IDs per hour ~148 years needed, in order to 
 // have a 1% probability of at least one collision. If/when multi-user, will be in the scope of
@@ -10,11 +10,9 @@ export const newId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg
 export type PropChildren = {children?: ReactNode}
 
 export type DataComponentFunction = (...args:any[]) => JSX.Element
-export type DataComponent = DataComponentFunction 
+export type DataComponentAttributes = { isDataComponent: true }
+export type DataComponent = DataComponentAttributes & DataComponentFunction 
 
-export type ComponentAttributes = { 
-    isDataComponent: true 
-}
 
 export type StringComponentProps = {}
 
@@ -24,7 +22,7 @@ export type StringComponentOptions = {
 }
 
 export type StringComponentFunction = (props:StringComponentProps) => JSX.Element
-export type StringComponentAttributes = ComponentAttributes & {
+export type StringComponentAttributes = DataComponentAttributes & {
 }
 export type StringComponent = StringComponentFunction & StringComponentAttributes
 
@@ -44,12 +42,32 @@ export type NumberComponentOptions = {
 }
 
 export type NumberComponentFunction = (props:NumberComponentProps) => JSX.Element
-export type NumberComponent = NumberComponentFunction & ComponentAttributes & {
+export type NumberComponent = NumberComponentFunction & DataComponentAttributes & {
 
 }
 
 export const Number = (options?: NumberComponentOptions):NumberComponent => {
     const ComponentFunction = (props?:NumberComponentProps) => <div>number - {JSON.stringify(options)}</div>
+    const componentProperties = {isDataComponent:true} as const
+    const component = Object.assign(ComponentFunction, componentProperties)
+    return component
+}
+
+export type BooleanComponentProps = {}
+
+export type BooleanComponentOptions = { 
+    minValue?: number, 
+    maxValue?: number, 
+    default?: number 
+}
+
+export type BooleanComponentFunction = (props:NumberComponentProps) => JSX.Element
+export type BooleanComponent = BooleanComponentFunction & DataComponentAttributes & {
+
+}
+
+export const Boolean = (options?: BooleanComponentOptions):BooleanComponent => {
+    const ComponentFunction = (props?:BooleanComponentProps) => <div>number - {JSON.stringify(options)}</div>
     const componentProperties = {isDataComponent:true} as const
     const component = Object.assign(ComponentFunction, componentProperties)
     return component
@@ -61,7 +79,7 @@ export type ListComponentProps = PropChildren & {
 export type ListComponentOptions = {}
 
 export type ListComponentFunction = (props:ListComponentProps) => JSX.Element
-export type ListComponent<TItem extends DataComponent> = ListComponentFunction & ComponentAttributes & {
+export type ListComponent<TItem extends DataComponent> = ListComponentFunction & DataComponentAttributes & {
     Item:TItem
     idProvider: ()=>string
     indexProvider: ()=>number
@@ -93,13 +111,12 @@ export type EntityComponentOptions = {
 export type EntityPropertyMap = {[propertyName:string]:DataComponent}
 
 export type EntityComponentFunction = (props:EntityComponentProps) => JSX.Element
-export type EntityComponent<TProperties extends EntityPropertyMap> = EntityComponentFunction & ComponentAttributes & {
+export type EntityComponent<TProperties extends EntityPropertyMap> = EntityComponentFunction & DataComponentAttributes & {
     +readonly [Property in keyof TProperties]: TProperties[Property]
 }
 
-const resolve = <T,>(v:T|(()=>T)) => v instanceof Function ? v() : v
 
-export const Entity = <TProperties extends EntityPropertyMap>(properties: TProperties, options?: EntityComponentOptions) => {
+export const Struct = <TProperties extends EntityPropertyMap>(properties: TProperties, options?: EntityComponentOptions) => {
     
     type AtomId = string
     type AtomState = {entityId:string|null}
@@ -112,15 +129,14 @@ export const Entity = <TProperties extends EntityPropertyMap>(properties: TPrope
     const Context = createContext<ContextState>("")
 
     const ComponentFunction = (props:EntityComponentProps) => {
-        const _newId = newId()
-        const [contextId,] = useState(_newId)
+        const [contextId,] = useState(() => newId()) // Why am I seeing two different contextIds?
         const [state, setState] = useRecoilState(stateAtom(contextId))
-        console.log("Entity", atomId, contextId, "ComponentFunction", state, props.id, _newId);
+        console.log("Entity", atomId, contextId, "ComponentFunction", state, props.id);
         // TODO: initialization of id is delayed... fix that somehow? use Suspend or something?
         useEffect(() => {
             console.log("Entity", atomId, contextId, "ComponentFunction", "useEffect", state, props.id);
             setState({...state, entityId:props.id ?? null})
-        }, []) // eslint-disable-line react-hooks/exhaustive-deps
+        }, [props.id]) // eslint-disable-line react-hooks/exhaustive-deps
         return true // state.entityId 
             ? <Context.Provider value={contextId}>entity - {state.entityId} - {props.children}</Context.Provider> 
             : <></> 
@@ -157,23 +173,29 @@ export const Entity = <TProperties extends EntityPropertyMap>(properties: TPrope
     return component
 }
 
-const ToDoItem = Entity({
-    Title: String()
-})
+export type EnumOptions<T extends string> = {default:T}
 
-const Nested = () => {
-    console.log("Nested");
-    const setId = ToDoItem.useSetId()
-    const onClick = () => setId("bar")
-    return <div onClick={onClick}>Click</div>
+export const Enum = <T extends string>(values:Array<T>, options?:EnumOptions<T>) => {
+
+    const Values:{[K in T]:K} = values.reduce((res, key) => {
+        res[key] = key
+        return res
+    }, Object.create(null))
+
+    const useValue = ():T => "" as any  // TODO
+    const useSetValue = () => (value:T) => {}   // TODO
+
+    type ForEachEnumValueArgs = {value:T, isCurrentValue:boolean, selectValue:()=>void}
+    type ForEachChildFunction = (args:ForEachEnumValueArgs) => React.ReactElement<any>
+    const ForEachEnumValue = (props:{children:ForEachChildFunction}) => {
+        return <></>   // TODO
+    }
+
+    const ComponentFunction = () => <></>   // TODO
+
+    return Object.assign(
+        ComponentFunction,
+        {isDataComponent: true, Values, useValue, useSetValue, ForEachEnumValue } as const
+    )
+
 }
-
-export const Example = () => {
-    console.log("Example");
-    
-    return <ToDoItem id={"foo-bar"}>
-        <Nested/>
-    </ToDoItem>
-
-}
-
