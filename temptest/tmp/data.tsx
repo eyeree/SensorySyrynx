@@ -2,7 +2,7 @@
 import { Box, Button, Grid, TextField } from "@mui/material"
 import { ChangeEvent, createContext, ReactElement, ReactNode, useContext, useEffect, useState } from "react"
 import { atom, atomFamily, RecoilState, SerializableParam, SetterOrUpdater, useRecoilState, useRecoilValue, useResetRecoilState, useSetRecoilState } from "recoil";
-import { newId } from "./id";
+import { newId } from "../src/id";
 import reactElementToJSXString from 'react-element-to-jsx-string';
 import * as React from 'react'
 
